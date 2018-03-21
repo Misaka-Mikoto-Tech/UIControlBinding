@@ -7,7 +7,10 @@
 2. 逻辑编写人员可以点击UIControlData组件右上方齿轮图标内的 ``复制代码到剪贴板`` 菜单得到变量声明代码(可能以上两个步骤都是逻辑编写人员来操作)
 
 ## 操作示意图
-> 待填充
+### 拼完界面
+![image](Preview/AddComponent.png)
+### 编写逻辑代码时
+![image](Preview/CopyCode.png)
 
 ## 特别感谢
 * **flashyiyi**: https://github.com/flashyiyi
