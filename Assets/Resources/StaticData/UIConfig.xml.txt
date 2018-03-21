@@ -1,0 +1,4 @@
+<UI>
+    <UIA name = "uiA" class = "UIA" prefab = "UI/UIA.prefab"/>
+    <UIA name = "uiB" class = "UIB" prefab = "UI/UIB.prefab"/>
+</UI>
