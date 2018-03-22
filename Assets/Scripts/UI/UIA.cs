@@ -16,7 +16,7 @@ public class UIA : IWindow
 
 
 
-    public void TestBinding()
+    public void CheckBinding()
     {
         Debug.Assert(lbl_fps != null && lbl_fps.Length == 2);
         Debug.Assert(btn_login != null);

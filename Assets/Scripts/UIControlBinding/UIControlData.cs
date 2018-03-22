@@ -58,24 +58,24 @@ public class UIControlData : MonoBehaviour
 
             var objs = controls[GetIndex(fi.Name)];
             Type objType;
-            if (_typeMap.TryGetValue(objs.type, out objType))
+            if (!_typeMap.TryGetValue(objs.type, out objType))
+                continue;
+
+            if (fieldType.IsArray)
             {
-                if (fieldType.IsArray)
-                {
-                    Array arrObj = Array.CreateInstance(objType, objs.targets.Length);
+                Array arrObj = Array.CreateInstance(objType, objs.targets.Length);
                     
-                    // 给数组元素设置数据
-                    for (int j = 0, jmax = objs.targets.Length; j < jmax; j++)
-                    {
-                        arrObj.SetValue(objs.targets[j], j);
-                    }
-                    fi.SetValue(window, arrObj);
-                }
-                else
+                // 给数组元素设置数据
+                for (int j = 0, jmax = objs.targets.Length; j < jmax; j++)
                 {
-                    UnityEngine.Object component = GetComponent(fi.Name);
-                    fi.SetValue(window, component);
+                    arrObj.SetValue(objs.targets[j], j);
                 }
+                fi.SetValue(window, arrObj);
+            }
+            else
+            {
+                UnityEngine.Object component = GetComponent(fi.Name);
+                fi.SetValue(window, component);
             }
         }
     }
@@ -301,16 +301,10 @@ public class UIControlData : MonoBehaviour
             if (ctrl.targets.Length == 0)
                 continue;
 
-
             if(ctrl.targets.Length == 1)
-            {
                 sb.AppendFormat("\t\t[ControlBinding]\r\n\t\tprivate {0} {1};\r\n", ctrl.type, ctrl.name);
-            }
             else
-            {
-                // 由于没有找到有效修改数组长度的API，此处先写死长度
                 sb.AppendFormat("\t\t[ControlBinding]\r\n\t\tprivate {0}[] {1};\r\n", ctrl.type, ctrl.name);
-            }
         }
         sb.Append("#endregion\r\n\r\n");
 

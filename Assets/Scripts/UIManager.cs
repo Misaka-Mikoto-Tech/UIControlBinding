@@ -17,7 +17,7 @@ public class UIManager : UnitySingleton<UIManager>
             ctrlData.BindAllFields(uiA);
         }
 
-        uiA.TestBinding();
+        uiA.CheckBinding();
 	}
 	
 	void Update () {
