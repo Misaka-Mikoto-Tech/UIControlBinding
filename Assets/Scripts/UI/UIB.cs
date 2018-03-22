@@ -9,10 +9,11 @@ public class UIB : IWindow
     [ControlBinding]
     private Button btn_OK;
     [ControlBinding]
-    private Text[] txt_group = new Text[4];
+    private Text[] txt_group;
     [ControlBinding]
     private Dropdown sel_country;
     #endregion
+
 
 
     public void Close()

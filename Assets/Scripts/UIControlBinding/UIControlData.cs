@@ -62,16 +62,14 @@ public class UIControlData : MonoBehaviour
             {
                 if (fieldType.IsArray)
                 {
-                    object[] arrObj = (object[])fi.GetValue(window); // TODO 数组必须提前定义
-                    // 设置长度(经测试无效，暂时没找到原因)
-                    //fieldType.InvokeMember("Set", BindingFlags.CreateInstance, null, arrObj, new object[] { objs.targets.Length });
+                    Array arrObj = Array.CreateInstance(objType, objs.targets.Length);
                     
                     // 给数组元素设置数据
-                    for (int j = 0; j < objs.targets.Length; j++)
+                    for (int j = 0, jmax = objs.targets.Length; j < jmax; j++)
                     {
-                        MethodInfo mi = fieldType.GetMethod("SetValue", new Type[2] { typeof(object), typeof(int)});
-                        mi.Invoke(arrObj, new object[] { objs.targets[j], j });
+                        arrObj.SetValue(objs.targets[j], j);
                     }
+                    fi.SetValue(window, arrObj);
                 }
                 else
                 {
@@ -280,7 +278,7 @@ public class UIControlData : MonoBehaviour
 
     public static void ClearConsole()
     {
-#if UNITY_2017
+#if UNITY_2017 || UNITY_2018
         var logEntries = Type.GetType("UnityEditor.LogEntries,UnityEditor.dll");
 #else
         var logEntries = System.Type.GetType("UnityEditorInternal.LogEntries,UnityEditor.dll");
@@ -311,7 +309,7 @@ public class UIControlData : MonoBehaviour
             else
             {
                 // 由于没有找到有效修改数组长度的API，此处先写死长度
-                sb.AppendFormat("\t\t[ControlBinding]\r\n\t\tprivate {0}[] {1} = new {2}[{3}];\r\n", ctrl.type, ctrl.name, ctrl.type, ctrl.targets.Length);
+                sb.AppendFormat("\t\t[ControlBinding]\r\n\t\tprivate {0}[] {1};\r\n", ctrl.type, ctrl.name);
             }
         }
         sb.Append("#endregion\r\n\r\n");

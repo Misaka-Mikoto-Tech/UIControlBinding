@@ -7,7 +7,7 @@ public class UIA : IWindow
 {
     #region 控件绑定变量声明，自动生成请勿手改
     [ControlBinding]
-    private Text[] lbl_fps = new Text[2];
+    private Text[] lbl_fps;
     [ControlBinding]
     private Button btn_login;
     [ControlBinding]
@@ -15,11 +15,13 @@ public class UIA : IWindow
     #endregion
 
 
+
     public void TestBinding()
     {
-        Debug.Assert(lbl_fps != null && lbl_fps.Length > 0);
+        Debug.Assert(lbl_fps != null && lbl_fps.Length == 2);
         Debug.Assert(btn_login != null);
         Debug.Assert(tg_mute != null);
+        Debug.Log("<color=green>绑定测试通过</color>");
     }
 
     public void Close()
