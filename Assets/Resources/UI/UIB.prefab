@@ -229,7 +229,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!1 &1644895252770160
 GameObject:
   m_ObjectHideFlags: 1
@@ -437,15 +437,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controls:
   - name: btn_OK
+    type: Button
     targets:
-    - {fileID: 1993486383832682}
+    - {fileID: 114184993180851242}
   - name: txt_group
+    type: Text
     targets:
     - {fileID: 114629094140347284}
     - {fileID: 114723272932872532}
     - {fileID: 114073986801507054}
     - {fileID: 114672845812655474}
   - name: sel_country
+    type: Dropdown
     targets:
     - {fileID: 114661292747536318}
 --- !u!114 &114060806822616974

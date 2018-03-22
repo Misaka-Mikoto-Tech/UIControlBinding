@@ -1,41 +1,59 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UIA : IWindow
 {
+    #region 控件绑定变量声明，自动生成请勿手改
+    [ControlBinding]
+    private Text[] lbl_fps = new Text[2];
+    [ControlBinding]
+    private Button btn_login;
+    [ControlBinding]
+    private Toggle tg_mute;
+    #endregion
+
+
+    public void TestBinding()
+    {
+        Debug.Assert(lbl_fps != null && lbl_fps.Length > 0);
+        Debug.Assert(btn_login != null);
+        Debug.Assert(tg_mute != null);
+    }
+
     public void Close()
     {
-        throw new System.NotImplementedException();
+        //throw new System.NotImplementedException();
     }
 
     public void Destroy()
     {
-        throw new System.NotImplementedException();
+        //throw new System.NotImplementedException();
     }
 
     public void Hide()
     {
-        throw new System.NotImplementedException();
+        //throw new System.NotImplementedException();
     }
 
     public void Initialize()
     {
-        throw new System.NotImplementedException();
+        //throw new System.NotImplementedException();
     }
 
     public void Open()
     {
-        throw new System.NotImplementedException();
+        //throw new System.NotImplementedException();
     }
 
     public void Refresh()
     {
-        throw new System.NotImplementedException();
+        //throw new System.NotImplementedException();
     }
 
     public void Show()
     {
-        throw new System.NotImplementedException();
+        //throw new System.NotImplementedException();
     }
 }

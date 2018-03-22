@@ -1,15 +1,25 @@
-﻿using System.Collections;
+﻿using SDGame;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UIManager : MonoBehaviour {
+public class UIManager : UnitySingleton<UIManager>
+{
 
-	// Use this for initialization
 	void Start () {
-		
+        // TODO get config from xml
+        UIA uiA = new UIA();
+        GameObject prefab = Resources.Load<GameObject>("UI/UIA");
+        GameObject go = Instantiate(prefab);
+        UIControlData ctrlData = go.GetComponent<UIControlData>();
+        if(ctrlData != null)
+        {
+            ctrlData.BindAllFields(uiA);
+        }
+
+        uiA.TestBinding();
 	}
 	
-	// Update is called once per frame
 	void Update () {
 		
 	}

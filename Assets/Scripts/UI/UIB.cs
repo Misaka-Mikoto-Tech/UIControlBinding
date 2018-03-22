@@ -1,9 +1,20 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UIB : IWindow
 {
+    #region 控件绑定变量声明，自动生成请勿手改
+    [ControlBinding]
+    private Button btn_OK;
+    [ControlBinding]
+    private Text[] txt_group = new Text[4];
+    [ControlBinding]
+    private Dropdown sel_country;
+    #endregion
+
+
     public void Close()
     {
         throw new System.NotImplementedException();

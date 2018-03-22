@@ -449,13 +449,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controls:
   - name: lbl_fps
+    type: Text
     targets:
     - {fileID: 114177018401069572}
     - {fileID: 114177018401069572}
   - name: btn_login
+    type: Button
     targets:
     - {fileID: 114542009482016618}
   - name: tg_mute
+    type: Toggle
     targets:
     - {fileID: 114744439604940928}
 --- !u!114 &114248703222784072

@@ -14,7 +14,8 @@ using UnityEditor;
 public struct ControlItem
 {
     public string                   name;
-    public Type                     type;
+    [HideInInspector]
+    public string                   type;
     public UnityEngine.Object[]     targets;
 }
 
@@ -25,29 +26,59 @@ public class UIControlData : MonoBehaviour
     /// 所有绑定的组件，不允许重名
     /// </summary>
     public List<ControlItem>    controls;
+    private static Dictionary<string, Type> _typeMap = new Dictionary<string, Type>()
+    {
+        { "Text", typeof(Text)},
+        { "RawImage", typeof(RawImage)},
+        { "Button", typeof(Button)},
+        { "Toggle", typeof(Toggle)},
+        { "Slider", typeof(Slider)},
+        { "Scrollbar", typeof(Scrollbar)},
+        { "Dropdown", typeof(Dropdown)},
+        { "InputField", typeof(InputField)},
+        { "Canvas", typeof(Canvas)},
+        { "ScrollRect", typeof(ScrollRect)},
+        { "Image", typeof(Image)},
+        { "RectTransform", typeof(RectTransform)},
+        { "Transform", typeof(Transform)},
+    };
 
     public void BindAllFields(IWindow window)
     {
         if (window == null)
             return;
 
-        FieldInfo[] fis = window.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
+        FieldInfo[] fis = window.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
         for(int i = 0, imax = fis.Length; i < imax; i++)
         {
             FieldInfo fi = fis[i];
             Type fieldType = fi.FieldType;
-            if (fi.FieldType.GetCustomAttributes(typeof(ControlBindingAttribute), false).Length == 0)
+            if (fi.GetCustomAttributes(typeof(ControlBindingAttribute), false).Length == 0)
                 continue;
 
-            if (fieldType.IsArray)
+            var objs = controls[GetIndex(fi.Name)];
+            Type objType;
+            if (_typeMap.TryGetValue(objs.type, out objType))
             {
-                Component[] components = GetComponents(fi.Name);
-                fi.SetValue(window, components);
-            }
-            else
-            {
-                Component component = GetComponent(fi.Name);
-                fi.SetValue(window, component);
+                if (fieldType.IsArray)
+                {
+                    object[] arrObj = (object[])fi.GetValue(window); // TODO 这一步获取不到
+                    // 设置长度(经测试无效，暂时没找打原因)
+                    //fieldType.InvokeMember("Set", BindingFlags.CreateInstance, null, arrObj, new object[] { objs.targets.Length });
+                    
+                    // 复制数据并设置进去
+                    object[] copyedArr = new object[objs.targets.Length];
+                    for (int j = 0; j < objs.targets.Length; j++)
+                    {
+                        MethodInfo mi = fieldType.GetMethod("SetValue", new Type[2] { typeof(object), typeof(int)});
+                        mi.Invoke(arrObj, new object[] { objs.targets[j], j });
+                    }
+                }
+                else
+                {
+                    UnityEngine.Object component = GetComponent(fi.Name);
+                    fi.SetValue(window, component);
+                }
             }
         }
     }
@@ -73,26 +104,26 @@ public class UIControlData : MonoBehaviour
         return targets[0] as T;
     }
 
-    public new Component GetComponent(string name)
+    public new UnityEngine.Object GetComponent(string name)
     {
         int idx = GetIndex(name);
         if (idx == -1)
             return null;
 
-        Component[] targets = controls[idx].targets as Component[];
+        var targets = controls[idx].targets;
         if (targets.Length == 0)
             return null;
 
         return targets[0];
     }
 
-    public Component[] GetComponents(string name)
+    public UnityEngine.Object[] GetComponents(string name)
     {
         int idx = GetIndex(name);
         if (idx == -1)
             return null;
 
-        return controls[idx].targets as Component[];
+        return controls[idx].targets;
     }
 
     
@@ -190,7 +221,7 @@ public class UIControlData : MonoBehaviour
                 objs[j] = correctValue.Value;
             }
 
-            controls[i] = new ControlItem() { name = controls[i].name, type = type, targets = objs };
+            controls[i] = new ControlItem() { name = controls[i].name, type = type.Name, targets = objs };
         }
         return true;
     }
@@ -265,8 +296,7 @@ public class UIControlData : MonoBehaviour
         CorrectComponents();
 
         StringBuilder sb = new StringBuilder(1024);
-        sb.Append("\t\t#region 控件绑定变量声明\r\n");
-        sb.AppendFormat("\t\tprivate List<ControlItem> uiCtrls = view.GetComponent<UIControlData>().controls;\r\n");
+        sb.Append("#region 控件绑定变量声明，自动生成请勿手改\r\n");
 
         for(int i = 0, imax = controls.Count; i < imax; i++)
         {
@@ -277,20 +307,20 @@ public class UIControlData : MonoBehaviour
 
             if(ctrl.targets.Length == 1)
             {
-                sb.AppendFormat("\t\tprivate {0} {1} = uiCtrls[{2}].targets[0] as {3};\r\n", ctrl.type.Name, ctrl.name, i, ctrl.type.Name);
+                sb.AppendFormat("\t\t[ControlBinding]\r\n\t\tprivate {0} {1};\r\n", ctrl.type, ctrl.name);
             }
             else
             {
-                sb.AppendFormat("\t\tprivate {0}[] {1} = new {2}[{3}];\r\n", ctrl.type.Name, ctrl.name, ctrl.type.Name, ctrl.targets.Length);
-                for(int j = 0; j < ctrl.targets.Length; j++)
-                {
-                    sb.AppendFormat("\t\t{0}[{1}] = uiCtrls[{2}].targets[{3}] as {4};\r\n", ctrl.name, j, i, j, ctrl.type.Name);
-                }
+                // 由于没有找到有效修改数组长度的API，此处先写死长度
+                sb.AppendFormat("\t\t[ControlBinding]\r\n\t\tprivate {0}[] {1} = new {2}[{3}];\r\n", ctrl.type, ctrl.name, ctrl.type, ctrl.targets.Length);
             }
         }
-        sb.Append("\t\t#endregion\r\n\r\n");
+        sb.Append("#endregion\r\n\r\n");
 
         GUIUtility.systemCopyBuffer = sb.ToString();
+
+        UnityEngine.Object go = PrefabUtility.GetPrefabParent(gameObject);
+        PrefabUtility.ReplacePrefab(gameObject, go, ReplacePrefabOptions.Default);
     }
 
 #endif
