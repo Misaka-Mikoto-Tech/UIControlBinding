@@ -62,12 +62,11 @@ public class UIControlData : MonoBehaviour
             {
                 if (fieldType.IsArray)
                 {
-                    object[] arrObj = (object[])fi.GetValue(window); // TODO 这一步获取不到
-                    // 设置长度(经测试无效，暂时没找打原因)
+                    object[] arrObj = (object[])fi.GetValue(window); // TODO 数组必须提前定义
+                    // 设置长度(经测试无效，暂时没找到原因)
                     //fieldType.InvokeMember("Set", BindingFlags.CreateInstance, null, arrObj, new object[] { objs.targets.Length });
                     
-                    // 复制数据并设置进去
-                    object[] copyedArr = new object[objs.targets.Length];
+                    // 给数组元素设置数据
                     for (int j = 0; j < objs.targets.Length; j++)
                     {
                         MethodInfo mi = fieldType.GetMethod("SetValue", new Type[2] { typeof(object), typeof(int)});
