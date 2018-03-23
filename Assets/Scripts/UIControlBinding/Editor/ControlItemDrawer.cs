@@ -15,7 +15,7 @@ public class ControlItemDrawer
         _container = container;
         _item = item;
     }
-    public void Draw()
+    public bool Draw()
     {
         Rect rect = EditorGUILayout.BeginVertical();
         EditorGUILayout.BeginHorizontal();
@@ -29,11 +29,13 @@ public class ControlItemDrawer
         if (GUILayout.Button("+", EditorStyles.miniButton))
         {
             _container.AddControl(this);
+            return false;
         }
 
         if (GUILayout.Button("-", EditorStyles.miniButton))
         {
             _container.RemoveControl(this);
+            return false;
         }
         
         EditorGUILayout.EndHorizontal();
@@ -52,14 +54,20 @@ public class ControlItemDrawer
                 if (GUILayout.Button("+", EditorStyles.miniButton))
                 {
                     InsertItem(i + 1);
-                    _container.Repaint();
-                    return;
+                    return false;
                 }
                 if (GUILayout.Button("-", EditorStyles.miniButton))
                 {
-                    RemoveItem(i);
-                    _container.Repaint();
-                    return;
+                    if(_item.targets.Length == 1)
+                    {
+                        Debug.LogError("至少应保留一个控件");
+                        return false;
+                    }
+                    else
+                    {
+                        RemoveItem(i);
+                        return false;
+                    }
                 }
                 EditorGUILayout.EndHorizontal();
                 EditorGUILayout.Space();
@@ -70,7 +78,7 @@ public class ControlItemDrawer
         EditorGUILayout.EndVertical();
 
         GUI.Box(new Rect(rect.x - 10f, rect.y - 5f, rect.width + 20f, rect.height + 15f), "");
-
+        return true;
     }
 
     private void InsertItem(int idx)

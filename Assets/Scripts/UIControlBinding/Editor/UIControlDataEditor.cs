@@ -6,9 +6,9 @@ using UnityEditor;
 [CustomEditor(typeof(UIControlData))]
 public class UIControlDataEditor : Editor
 {
-    public static GUISkin skin;
-    private List<ControlItem> _controls;
-    private List<ControlItemDrawer> _drawers;
+    public static GUISkin               skin;
+    private List<ControlItem>           _controls;
+    private List<ControlItemDrawer>     _drawers;
 
     private void Awake()
     {
@@ -18,6 +18,11 @@ public class UIControlDataEditor : Editor
     public override void OnInspectorGUI()
     {
         UIControlData data = target as UIControlData;
+        if(data.controls == null)
+        {
+            data.controls = new List<ControlItem>();
+            data.controls.Add(new ControlItem());
+        }
         _controls = data.controls;
         CheckDrawers();
 
@@ -29,7 +34,11 @@ public class UIControlDataEditor : Editor
         for (int i = 0, imax = _drawers.Count; i < imax; i++)
         {
             GUILayout.Space(10f);
-            _drawers[i].Draw();
+            if (!_drawers[i].Draw())
+            {
+                Repaint();
+                return;
+            }
             GUILayout.Space(10f);
         }
 
@@ -61,16 +70,19 @@ public class UIControlDataEditor : Editor
 
         ControlItemDrawer drawer = new ControlItemDrawer(this, item);
         _drawers.Insert(idx + 1, drawer);
-
-        Repaint();
     }
 
     private void RemoveControl(int idx)
     {
-        _controls.RemoveAt(idx);
-        _drawers.RemoveAt(idx);
-
-        Repaint();
+        if(_controls.Count == 1)
+        {
+            Debug.LogError("至少应保留一个变量");
+        }
+        else
+        {
+            _controls.RemoveAt(idx);
+            _drawers.RemoveAt(idx);
+        }
     }
 
     public void AddControl(ControlItemDrawer drawer)

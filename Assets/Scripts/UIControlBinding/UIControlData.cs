@@ -17,7 +17,7 @@ public class ControlItem
     public string                       name = string.Empty;
     [HideInInspector]
     public string                       type = string.Empty;
-    public UnityEngine.Object[]         targets = new UnityEngine.Object[0];
+    public UnityEngine.Object[]         targets = new UnityEngine.Object[1];
 }
 
 [DisallowMultipleComponent]
@@ -169,6 +169,12 @@ public class UIControlData : MonoBehaviour
         bool isOK = true;
         for(int i = 0, imax = controls.Count; i < imax; i++)
         {
+            if (string.IsNullOrEmpty(controls[i].name)) // TODO Check if is a valid varible name
+            {
+                Debug.LogErrorFormat("第 {0} 个控件没有名字，请修正", i + 1);
+                return false;
+            }
+
             for (int j = controls.Count - 1; j >= 0; j--)
             {
                 if(controls[i].name == controls[j].name && i != j)
