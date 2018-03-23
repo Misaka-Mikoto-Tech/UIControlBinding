@@ -11,12 +11,13 @@ using UnityEditor;
 #endif
 
 [Serializable]
-public struct ControlItem
+public class ControlItem
 {
-    public string                   name;
+    
+    public string                       name = string.Empty;
     [HideInInspector]
-    public string                   type;
-    public UnityEngine.Object[]     targets;
+    public string                       type = string.Empty;
+    public List<UnityEngine.Object>     targets = new List<UnityEngine.Object>();
 }
 
 [DisallowMultipleComponent]
@@ -63,10 +64,10 @@ public class UIControlData : MonoBehaviour
 
             if (fieldType.IsArray)
             {
-                Array arrObj = Array.CreateInstance(objType, objs.targets.Length);
+                Array arrObj = Array.CreateInstance(objType, objs.targets.Count);
                     
                 // 给数组元素设置数据
-                for (int j = 0, jmax = objs.targets.Length; j < jmax; j++)
+                for (int j = 0, jmax = objs.targets.Count; j < jmax; j++)
                 {
                     arrObj.SetValue(objs.targets[j], j);
                 }
@@ -94,8 +95,8 @@ public class UIControlData : MonoBehaviour
         if (idx == -1)
             return null;
 
-        Component[] targets = controls[idx].targets as Component[];
-        if (targets.Length == 0)
+        var targets = controls[idx].targets;
+        if (targets.Count == 0)
             return null;
 
         return targets[0] as T;
@@ -108,13 +109,13 @@ public class UIControlData : MonoBehaviour
             return null;
 
         var targets = controls[idx].targets;
-        if (targets.Length == 0)
+        if (targets.Count == 0)
             return null;
 
         return targets[0];
     }
 
-    public UnityEngine.Object[] GetComponents(string name)
+    public List<UnityEngine.Object> GetComponents(string name)
     {
         int idx = GetIndex(name);
         if (idx == -1)
@@ -192,9 +193,9 @@ public class UIControlData : MonoBehaviour
     {
         for(int i = 0, imax = controls.Count; i < imax; i++)
         {
-            UnityEngine.Object[] objs = controls[i].targets;
+            var objs = controls[i].targets;
             Type type = null;
-            for(int j = 0, jmax = objs.Length; j < jmax; j++)
+            for(int j = 0, jmax = objs.Count; j < jmax; j++)
             {
                 if(objs[j] == null)
                 {
@@ -206,16 +207,16 @@ public class UIControlData : MonoBehaviour
                 if (go == null)
                     go = (objs[j] as Component).gameObject;
 
-                var correctValue = FindCorrectComponent(go);
+                var correctComponent = FindCorrectComponent(go);
                 if (type == null)
-                    type = correctValue.Key;
-                else if(type != correctValue.Key)
+                    type = correctComponent.GetType();
+                else if(type != correctComponent.GetType())
                 {
                     Debug.LogErrorFormat("UI [{0}] 控件名字 [{1}] 第 {2} 项与第 1 项的类型不同，请修正", gameObject.name, controls[i].name, j + 1);
                     return false;
                 }
 
-                objs[j] = correctValue.Value;
+                objs[j] = correctComponent;
             }
 
             controls[i] = new ControlItem() { name = controls[i].name, type = type.Name, targets = objs };
@@ -223,7 +224,7 @@ public class UIControlData : MonoBehaviour
         return true;
     }
 
-    private KeyValuePair<Type, UnityEngine.Object> FindCorrectComponent(GameObject go)
+    private UnityEngine.Object FindCorrectComponent(GameObject go)
     {
         List<Component> components = new List<Component>();
         go.GetComponents(components);
@@ -273,7 +274,7 @@ public class UIControlData : MonoBehaviour
                 newComp = go.GetComponent<Transform>();
         }
 
-        return new KeyValuePair<Type, UnityEngine.Object>(newComp.GetType(), newComp);
+        return newComp;
     }
 
     public static void ClearConsole()
@@ -298,10 +299,10 @@ public class UIControlData : MonoBehaviour
         for(int i = 0, imax = controls.Count; i < imax; i++)
         {
             ControlItem ctrl = controls[i];
-            if (ctrl.targets.Length == 0)
+            if (ctrl.targets.Count == 0)
                 continue;
 
-            if(ctrl.targets.Length == 1)
+            if(ctrl.targets.Count == 1)
                 sb.AppendFormat("\t\t[ControlBinding]\r\n\t\tprivate {0} {1};\r\n", ctrl.type, ctrl.name);
             else
                 sb.AppendFormat("\t\t[ControlBinding]\r\n\t\tprivate {0}[] {1};\r\n", ctrl.type, ctrl.name);
