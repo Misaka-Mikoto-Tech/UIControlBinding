@@ -17,7 +17,7 @@ public class ControlItem
     public string                       name = string.Empty;
     [HideInInspector]
     public string                       type = string.Empty;
-    public List<UnityEngine.Object>     targets = new List<UnityEngine.Object>();
+    public UnityEngine.Object[]         targets = new UnityEngine.Object[0];
 }
 
 [DisallowMultipleComponent]
@@ -64,10 +64,10 @@ public class UIControlData : MonoBehaviour
 
             if (fieldType.IsArray)
             {
-                Array arrObj = Array.CreateInstance(objType, objs.targets.Count);
+                Array arrObj = Array.CreateInstance(objType, objs.targets.Length);
                     
                 // 给数组元素设置数据
-                for (int j = 0, jmax = objs.targets.Count; j < jmax; j++)
+                for (int j = 0, jmax = objs.targets.Length; j < jmax; j++)
                 {
                     arrObj.SetValue(objs.targets[j], j);
                 }
@@ -96,7 +96,7 @@ public class UIControlData : MonoBehaviour
             return null;
 
         var targets = controls[idx].targets;
-        if (targets.Count == 0)
+        if (targets.Length == 0)
             return null;
 
         return targets[0] as T;
@@ -109,13 +109,13 @@ public class UIControlData : MonoBehaviour
             return null;
 
         var targets = controls[idx].targets;
-        if (targets.Count == 0)
+        if (targets.Length == 0)
             return null;
 
         return targets[0];
     }
 
-    public List<UnityEngine.Object> GetComponents(string name)
+    public UnityEngine.Object[] GetComponents(string name)
     {
         int idx = GetIndex(name);
         if (idx == -1)
@@ -169,11 +169,11 @@ public class UIControlData : MonoBehaviour
         bool isOK = true;
         for(int i = 0, imax = controls.Count; i < imax; i++)
         {
-            for(int j = controls.Count - 1; j >= 0; j--)
+            for (int j = controls.Count - 1; j >= 0; j--)
             {
                 if(controls[i].name == controls[j].name && i != j)
                 {
-                    Debug.LogErrorFormat("UI [{0}] 控件名字 [{1}] 第 {2} 项与第 {3} 项重复，请修正", gameObject.name, controls[i].name, i + 1, j + 1);
+                    Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项与第 {2} 项重复，请修正", controls[i].name, i + 1, j + 1);
                     return false;
                 }
             }
@@ -181,7 +181,7 @@ public class UIControlData : MonoBehaviour
 
         isOK = ReplaceTargetsToUIComponent();
         if(isOK)
-            Debug.LogFormat("UI [{0}] 控件绑定修正完毕", gameObject.name);
+            Debug.Log("控件绑定修正完毕");
 
         return isOK;
     }
@@ -191,15 +191,15 @@ public class UIControlData : MonoBehaviour
     /// </summary>
     private bool ReplaceTargetsToUIComponent()
     {
-        for(int i = 0, imax = controls.Count; i < imax; i++)
+        for (int i = 0, imax = controls.Count; i < imax; i++)
         {
             var objs = controls[i].targets;
             Type type = null;
-            for(int j = 0, jmax = objs.Count; j < jmax; j++)
+            for(int j = 0, jmax = objs.Length; j < jmax; j++)
             {
                 if(objs[j] == null)
                 {
-                    Debug.LogErrorFormat("UI [{0}] 控件名字 [{1}] 第 {2} 项为空，请修正", gameObject.name, controls[i].name, j + 1);
+                    Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项为空，请修正", controls[i].name, j + 1);
                     return false;
                 }
 
@@ -207,12 +207,19 @@ public class UIControlData : MonoBehaviour
                 if (go == null)
                     go = (objs[j] as Component).gameObject;
 
+                // 必须拖当前 Prefab 下的控件
+                if (!IsInCurrentPrefab((go.transform).transform))
+                {
+                    Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项不是当前 Prefab 下的控件，请修正", controls[i].name, j + 1);
+                    return false;
+                }
+
                 var correctComponent = FindCorrectComponent(go);
                 if (type == null)
                     type = correctComponent.GetType();
                 else if(type != correctComponent.GetType())
                 {
-                    Debug.LogErrorFormat("UI [{0}] 控件名字 [{1}] 第 {2} 项与第 1 项的类型不同，请修正", gameObject.name, controls[i].name, j + 1);
+                    Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项与第 1 项的类型不同，请修正", controls[i].name, j + 1);
                     return false;
                 }
 
@@ -222,6 +229,17 @@ public class UIControlData : MonoBehaviour
             controls[i] = new ControlItem() { name = controls[i].name, type = type.Name, targets = objs };
         }
         return true;
+    }
+
+    private bool IsInCurrentPrefab(Transform t)
+    {
+        do
+        {
+            if (t == transform)
+                return true;
+            t = t.parent;
+        } while (t != null);
+        return false;
     }
 
     private UnityEngine.Object FindCorrectComponent(GameObject go)
@@ -299,10 +317,10 @@ public class UIControlData : MonoBehaviour
         for(int i = 0, imax = controls.Count; i < imax; i++)
         {
             ControlItem ctrl = controls[i];
-            if (ctrl.targets.Count == 0)
+            if (ctrl.targets.Length == 0)
                 continue;
 
-            if(ctrl.targets.Count == 1)
+            if(ctrl.targets.Length == 1)
                 sb.AppendFormat("\t\t[ControlBinding]\r\n\t\tprivate {0} {1};\r\n", ctrl.type, ctrl.name);
             else
                 sb.AppendFormat("\t\t[ControlBinding]\r\n\t\tprivate {0}[] {1};\r\n", ctrl.type, ctrl.name);

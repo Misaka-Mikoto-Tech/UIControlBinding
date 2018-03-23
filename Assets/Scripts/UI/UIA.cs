@@ -21,7 +21,7 @@ public class UIA : IWindow
         Debug.Assert(lbl_fps != null && lbl_fps.Length == 2);
         Debug.Assert(btn_login != null);
         Debug.Assert(tg_mute != null);
-        Debug.Log("<color=green>绑定测试通过</color>");
+        Debug.Log("<color=lime>绑定测试通过</color>");
     }
 
     public void Close()

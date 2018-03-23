@@ -43,7 +43,7 @@ public class ControlItemDrawer
         if (_foldout)
         {
             EditorGUILayout.Space();
-            for (int i = 0, imax = _item.targets.Count; i < imax; i++)
+            for (int i = 0, imax = _item.targets.Length; i < imax; i++)
             {
                 Object obj = _item.targets[i];
                 EditorGUILayout.BeginHorizontal();
@@ -51,13 +51,13 @@ public class ControlItemDrawer
                 EditorGUILayout.Space(); EditorGUILayout.Space(); EditorGUILayout.Space();
                 if (GUILayout.Button("+", EditorStyles.miniButton))
                 {
-                    _item.targets.Insert(i + 1, new Object());
+                    InsertItem(i + 1);
                     _container.Repaint();
                     return;
                 }
                 if (GUILayout.Button("-", EditorStyles.miniButton))
                 {
-                    _item.targets.RemoveAt(i);
+                    RemoveItem(i);
                     _container.Repaint();
                     return;
                 }
@@ -71,5 +71,37 @@ public class ControlItemDrawer
 
         GUI.Box(new Rect(rect.x - 10f, rect.y - 5f, rect.width + 20f, rect.height + 15f), "");
 
+    }
+
+    private void InsertItem(int idx)
+    {
+        Object[] newArr = new Object[_item.targets.Length + 1];
+        for(int i = 0; i < idx; i++)
+        {
+            newArr[i] = _item.targets[i];
+        }
+        newArr[idx] = new Object();
+        for(int i = idx + 1; i < newArr.Length; i++)
+        {
+            newArr[i] = _item.targets[i - 1];
+        }
+
+        _item.targets = newArr;
+    }
+
+    private void RemoveItem(int idx)
+    {
+        Object[] newArr = new Object[_item.targets.Length - 1];
+        for(int i = 0; i < idx; i++)
+        {
+            newArr[i] = _item.targets[i];
+        }
+
+        for(int i = idx; i < newArr.Length; i++)
+        {
+            newArr[idx] = _item.targets[i + 1];
+        }
+
+        _item.targets = newArr;
     }
 }
