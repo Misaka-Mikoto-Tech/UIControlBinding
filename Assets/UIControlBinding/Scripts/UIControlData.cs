@@ -1,4 +1,24 @@
-﻿using System;
+﻿/*
+    URL: https://github.com/easy66/UIControlBinding
+    使用方法:
+    UE: 将此脚本添加到UI根节点，与程序协商好需要绑定的控件及其变量名后，将需要绑定的控件拖到脚本上
+    程序: 点此脚本右上角的齿轮，点 "复制代码到剪贴板" 按钮
+
+    UIManager 加载示例：
+    `` C#
+        UIA uiA = new UIA();
+        GameObject prefab = Resources.Load<GameObject>("UI/UIA"); // you can get ui config from config file
+        GameObject go = Instantiate(prefab);
+        UIControlData ctrlData = go.GetComponent<UIControlData>();
+        if(ctrlData != null)
+        {
+            ctrlData.BindAllFields(uiA);
+        }
+    ``
+
+ */
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -13,7 +33,6 @@ using UnityEditor;
 [Serializable]
 public class ControlItem
 {
-    
     public string                       name = string.Empty;
     [HideInInspector]
     public string                       type = string.Empty;

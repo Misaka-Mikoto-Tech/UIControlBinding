@@ -257,9 +257,20 @@ Prefab:
       propertyPath: m_RootOrder
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 114057754478238070, guid: 7846d5b0816bd014a8c838241ce39436,
+        type: 2}
+      propertyPath: controls.Array.data[0].targets.Array.data[0]
+      value: 
+      objectReference: {fileID: 1175736522}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 7846d5b0816bd014a8c838241ce39436, type: 2}
   m_IsPrefabParent: 0
+--- !u!114 &1175736522 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114184993180851242, guid: 7846d5b0816bd014a8c838241ce39436,
+    type: 2}
+  m_PrefabInternal: {fileID: 1124727837}
+  m_Script: {fileID: 1392445389, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1 &1689877509
 GameObject:
   m_ObjectHideFlags: 0

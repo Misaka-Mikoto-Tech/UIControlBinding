@@ -12,11 +12,20 @@ public class UIControlDataEditor : Editor
 
     private void Awake()
     {
-        skin = Resources.Load("Editor/UIControlDataSkin") as GUISkin;
+        if (EditorGUIUtility.isProSkin)
+            skin = Resources.Load("Editor/UIControlDataSkinPro") as GUISkin;
+        else
+            skin = Resources.Load("Editor/UIControlDataSkinPersonal") as GUISkin;
     }
 
     public override void OnInspectorGUI()
     {
+        if (skin == null || skin.customStyles == null || skin.customStyles.Length == 0)
+        {
+            base.OnInspectorGUI();
+            return;
+        }
+
         UIControlData data = target as UIControlData;
         if(data.controls == null)
         {
@@ -28,6 +37,8 @@ public class UIControlDataEditor : Editor
 
         EditorGUILayout.BeginVertical();
         EditorGUILayout.Space();
+        
+
         EditorGUILayout.LabelField("控件绑定", skin.customStyles[0]);
 
         

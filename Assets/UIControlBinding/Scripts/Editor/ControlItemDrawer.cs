@@ -77,7 +77,11 @@ public class ControlItemDrawer
 
         EditorGUILayout.EndVertical();
 
-        GUI.Box(new Rect(rect.x - 10f, rect.y - 5f, rect.width + 20f, rect.height + 15f), "");
+        if (EditorGUIUtility.isProSkin)
+            GUI.Box(new Rect(rect.x - 10f, rect.y - 5f, rect.width + 20f, rect.height + 15f), "");
+        else
+            GUI.Box(new Rect(rect.x - 10f, rect.y - 5f, rect.width + 20f, rect.height + 15f), "", UIControlDataEditor.skin.box);
+
         return true;
     }
 
