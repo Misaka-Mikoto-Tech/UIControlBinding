@@ -160,6 +160,7 @@ public class UIControlData : MonoBehaviour
 
     #endregion
 
+    #region For Editor
 #if UNITY_EDITOR
 
     [InitializeOnLoadMethod]
@@ -359,4 +360,5 @@ public class UIControlData : MonoBehaviour
     }
 
 #endif
-    }
+    #endregion
+}

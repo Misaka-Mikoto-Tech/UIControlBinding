@@ -8,13 +8,14 @@ public class ControlItemDrawer
 {
     private UIControlDataEditor     _container;
     private ControlItem             _item;
-    private bool                    _foldout;
+    private bool                    _foldout = true;
 
     public ControlItemDrawer(UIControlDataEditor container, ControlItem item)
     {
         _container = container;
         _item = item;
     }
+
     public bool Draw()
     {
         Rect rect = EditorGUILayout.BeginVertical();
@@ -82,7 +83,15 @@ public class ControlItemDrawer
         else
             GUI.Box(new Rect(rect.x - 10f, rect.y - 5f, rect.width + 20f, rect.height + 15f), "", UIControlDataEditor.skin.box);
 
+        PostProcess();
         return true;
+    }
+
+    private void PostProcess()
+    {
+        // 默认将新添加的第一个控件的名字作为变量名
+        if (_item.targets.Length > 0 && _item.targets[0] != null && string.IsNullOrEmpty(_item.name))
+            _item.name = _item.targets[0].name;
     }
 
     private void InsertItem(int idx)
