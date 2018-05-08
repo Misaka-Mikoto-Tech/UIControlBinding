@@ -100,7 +100,7 @@ public class UIControlData : MonoBehaviour
         }
     }
 
-    #region Get,不建议使用
+#region Get,不建议使用
 
     /// <summary>
     /// 找到指定名称的第一个组件, 不存在返回 null
@@ -158,34 +158,16 @@ public class UIControlData : MonoBehaviour
         return -1;
     }
 
-    #endregion
+#endregion
 
-    #region For Editor
+#region For Editor
 #if UNITY_EDITOR
 
-    [InitializeOnLoadMethod]
-    static void Start()
-    {
-        // 好像不太好使
-        PrefabUtility.prefabInstanceUpdated += (GameObject instance) =>
-        {
-            UIControlData[] uiControlData = instance.GetComponentsInChildren<UIControlData>();
-            if(uiControlData != null)
-            {
-                foreach(var comp in uiControlData)
-                {
-                    bool isOK = comp.CorrectComponents();
-                    // TODO 出错时如何拦截 Apply?
-                }
-            }
-        };
-    }
+    public bool dataHasChanged = false;
 
     [ContextMenu("修正组件")]
-    private bool CorrectComponents()
+    public bool CorrectComponents()
     {
-        ClearConsole();
-
         bool isOK = true;
         for(int i = 0, imax = controls.Count; i < imax; i++)
         {
@@ -248,6 +230,9 @@ public class UIControlData : MonoBehaviour
                     Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项与第 1 项的类型不同，请修正", controls[i].name, j + 1);
                     return false;
                 }
+
+                if (objs[j] != correctComponent)
+                    dataHasChanged = true;
 
                 objs[j] = correctComponent;
             }
@@ -321,22 +306,11 @@ public class UIControlData : MonoBehaviour
         return newComp;
     }
 
-    public static void ClearConsole()
-    {
-#if UNITY_2017 || UNITY_2018
-        var logEntries = Type.GetType("UnityEditor.LogEntries,UnityEditor.dll");
-#else
-        var logEntries = System.Type.GetType("UnityEditorInternal.LogEntries,UnityEditor.dll");
-#endif
-        var clearMethod = logEntries.GetMethod("Clear", BindingFlags.Static | BindingFlags.Public);
-        clearMethod.Invoke(null, null);
-    }
+    
 
     [ContextMenu("复制代码到剪贴板")]
     public void CopyCodeToClipBoard()
     {
-        CorrectComponents();
-
         StringBuilder sb = new StringBuilder(1024);
         sb.Append("#region 控件绑定变量声明，自动生成请勿手改\r\n");
 
@@ -354,11 +328,10 @@ public class UIControlData : MonoBehaviour
         sb.Append("#endregion\r\n\r\n");
 
         GUIUtility.systemCopyBuffer = sb.ToString();
-
-        UnityEngine.Object go = PrefabUtility.GetPrefabParent(gameObject);
-        PrefabUtility.ReplacePrefab(gameObject, go, ReplacePrefabOptions.Default);
     }
 
+    
+
 #endif
-    #endregion
+#endregion
 }
