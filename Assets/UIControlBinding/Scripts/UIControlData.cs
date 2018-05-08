@@ -39,13 +39,25 @@ public class ControlItem
     public UnityEngine.Object[]         targets = new UnityEngine.Object[1];
 }
 
+[Serializable]
+public class SubUIControlData
+{
+    public string           name                = string.Empty;
+    public UIControlData    subControlData      = null;
+}
+
 [DisallowMultipleComponent]
 public class UIControlData : MonoBehaviour
 {
     /// <summary>
     /// 所有绑定的组件，不允许重名
     /// </summary>
-    public List<ControlItem>    controls;
+    public List<ControlItem>        controls;
+    /// <summary>
+    /// 子UI数据
+    /// </summary>
+    public List<SubUIControlData>     subControlDatas;
+
     private static Dictionary<string, Type> _typeMap = new Dictionary<string, Type>()
     {
         { "Text", typeof(Text)},

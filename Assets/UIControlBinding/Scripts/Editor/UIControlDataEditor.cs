@@ -8,6 +8,7 @@ public class UIControlDataEditor : Editor
 {
     public static GUISkin               skin;
     private List<ControlItem>           _controls;
+    private List<SubUIControlData>      _subUIControlDatas;
     private List<ControlItemDrawer>     _drawers;
 
     private void Awake()
@@ -33,6 +34,7 @@ public class UIControlDataEditor : Editor
             data.controls.Add(new ControlItem());
         }
         _controls = data.controls;
+        _subUIControlDatas = data.subControlDatas;
         CheckDrawers();
 
         EditorGUILayout.BeginVertical();
