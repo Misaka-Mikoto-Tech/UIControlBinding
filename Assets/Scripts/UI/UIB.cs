@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using SDGame.UITools;
 
 public class UIB : IWindow
 {

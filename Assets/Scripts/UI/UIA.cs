@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using SDGame.UITools;
 
 public class UIA : IWindow
 {
@@ -12,7 +13,16 @@ public class UIA : IWindow
     private Button btn_login;
     [ControlBinding]
     private Toggle tg_mute;
+
+    [SubUIBinding]
+    private UIControlData LeftUI;
+    [SubUIBinding]
+    private UIControlData RightUI;
     #endregion
+
+
+
+
 
 
 
@@ -21,6 +31,8 @@ public class UIA : IWindow
         Debug.Assert(lbl_fps != null && lbl_fps.Length == 2);
         Debug.Assert(btn_login != null);
         Debug.Assert(tg_mute != null);
+        Debug.Assert(LeftUI != null);
+        Debug.Assert(RightUI != null);
         Debug.Log("<color=lime>绑定测试通过</color>");
     }
 

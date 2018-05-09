@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace SDGame.UITools
 {
-    public class ControlBindingAttribute : Attribute
+    public class SubUIBindingAttribute : Attribute
     {
     }
 }
