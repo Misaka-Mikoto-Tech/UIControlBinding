@@ -62,7 +62,7 @@ namespace SDGame.UITools
                             if (!ChangeControlsTypeTo(_controlTypeIdx))
                                 _controlTypeIdx = 0; // 切换失败，重置回自动
                         }
-                        else // 被重置回了自动
+                        else // 被主动设置为了自动
                             _itemData.type = string.Empty;
 
                         return false;

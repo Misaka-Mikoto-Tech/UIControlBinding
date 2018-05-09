@@ -71,7 +71,7 @@ namespace SDGame.UITools
         public List<SubUIItemData>       subUIItemDatas;
 
         /// <summary>
-        /// 已知类型列表，如果以后有自定义类型可以加到这里并同时修改 FindCorrectComponent 方法
+        /// 已知类型列表，如果以后有自定义类型可以调用 AddCustomType 方法添加
         /// </summary>
         private static Dictionary<string, Type> _typeMap = new Dictionary<string, Type>()
         {
@@ -443,7 +443,7 @@ namespace SDGame.UITools
 
             if (string.IsNullOrEmpty(typename))
             {
-                // 没指定类型为自动类型，在 _typeMap 里从上往下找
+                // 类型名为空则为自动类型，在 _typeMap 里从上往下找
                 foreach (var kv in _typeMap)
                 {
                     newComp = getSpecialTypeComp(kv.Value);
@@ -452,7 +452,7 @@ namespace SDGame.UITools
                 }
             }
             else
-            {// 指定了类型则只找指定类型的控件
+            {// 指定了类型名则只找指定类型的控件
                 Type type = null;
                 if (_typeMap.TryGetValue(typename, out type))
                 {
