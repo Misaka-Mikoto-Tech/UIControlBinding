@@ -277,6 +277,34 @@ namespace SDGame.UITools
             return isOK;
         }
 
+        public bool CheckSubUIs()
+        {
+            for (int i = 0, imax = subUIItemDatas.Count; i < imax; i++)
+            {
+                var subUI = subUIItemDatas[i];
+                if(subUI != null)
+                {
+                    if (string.IsNullOrEmpty(subUI.name))
+                    {
+                        Debug.LogErrorFormat("[{0}]第 {1} 个子UI没有设置名字, 请修正", gameObject.name, i + 1);
+                        return false;
+                    }
+
+                    if(subUI.subUIData == null)
+                    {
+                        Debug.LogErrorFormat("[{0}]第 {1} 个子UI没有赋值, 请修正", gameObject.name, i + 1);
+                        return false;
+                    }
+                }
+                else
+                {
+                    Debug.LogError("internal error at ControlBinding, pls contact author");
+                    return false;
+                }
+            }
+            return true;
+        }
+
         /// <summary>
         /// 由于自动拖上去的对象永远都是 GameObject，所以我们需要把它修正为正确的对象类型
         /// </summary>
