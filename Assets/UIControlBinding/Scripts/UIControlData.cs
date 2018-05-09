@@ -119,7 +119,7 @@ namespace SDGame.UITools
         /// <param name="type"></param>
         public static void AddCustomType(string name, Type type)
         {
-
+            _typeMap.Add(name, type);
         }
 
         public static string[] GetAllTypeNames()
@@ -369,10 +369,28 @@ namespace SDGame.UITools
                     }
 
                     UnityEngine.Object correctComponent = FindCorrectComponent(go, ctrlItemDatas[i].type);
+                    if(correctComponent == null)
+                    {
+                        Debug.LogErrorFormat("控件 [{0}] 第 {1} 项不是 {2} 类型，请修正", ctrlItemDatas[i].name, j + 1, ctrlItemDatas[i].type);
+                        return false;
+                    }
 
-                    if (type == null)
-                        type = correctComponent.GetType();
-                    else if(type != correctComponent.GetType())
+                    
+                    if (type == null) // 当前变量的第一个控件时执行
+                    {
+                        if (string.IsNullOrEmpty(ctrlItemDatas[i].type))
+                        {
+                            type = correctComponent.GetType();
+                        }else
+                        {
+                            if(!_typeMap.TryGetValue(ctrlItemDatas[i].type, out type))
+                            {
+                                Debug.LogError("Internal Error, pls contact author");
+                                return false;
+                            }
+                        }
+                    }
+                    else if(correctComponent.GetType() != type && !correctComponent.GetType().IsSubclassOf(type))
                     {
                         Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项与第 1 项的类型不同，请修正", ctrlItemDatas[i].name, j + 1);
                         return false;
@@ -400,30 +418,46 @@ namespace SDGame.UITools
             return false;
         }
 
-        private UnityEngine.Object FindCorrectComponent(GameObject go, string targetType)
+        private UnityEngine.Object FindCorrectComponent(GameObject go, string typename)
         {
-            if (targetType == "GameObject")
+            if (typename == "GameObject")
                 return go;
 
             List<Component> components = new List<Component>();
             go.GetComponents(components);
 
-            Component newComp = null;
-
-            foreach(var kv in _typeMap) // 按类型列表里的顺序从上往下找
+            Func<Type, Component> getSpecialTypeComp = (Type t) =>
             {
-                bool isFound = false;
-                foreach(var comp in components)
+                foreach (var comp in components)
                 {
-                    if(kv.Value == comp.GetType())
+                    Type compType = comp.GetType();
+                    if (compType == t || compType.IsSubclassOf(t))
                     {
-                        newComp = comp;
-                        isFound = true;
-                        break;
+                        return comp;
                     }
                 }
-                if (isFound)
-                    break;
+                return null;
+            };
+
+            Component newComp = null;
+
+            if (string.IsNullOrEmpty(typename))
+            {
+                // 没指定类型为自动类型，在 _typeMap 里从上往下找
+                foreach (var kv in _typeMap)
+                {
+                    newComp = getSpecialTypeComp(kv.Value);
+                    if (newComp != null)
+                        break;
+                }
+            }
+            else
+            {// 指定了类型则只找指定类型的控件
+                Type type = null;
+                if (_typeMap.TryGetValue(typename, out type))
+                {
+                    newComp = getSpecialTypeComp(type);
+                }
             }
 
             return newComp;
