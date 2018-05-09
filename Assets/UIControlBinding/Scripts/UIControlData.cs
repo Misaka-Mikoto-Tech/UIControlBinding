@@ -30,8 +30,11 @@ using System.Text;
 using UnityEditor;
 #endif
 
+/// <summary>
+/// 单个控件数据
+/// </summary>
 [Serializable]
-public class ControlItem
+public class CtrlItemData
 {
     public string                       name = string.Empty;
     [HideInInspector]
@@ -39,25 +42,34 @@ public class ControlItem
     public UnityEngine.Object[]         targets = new UnityEngine.Object[1];
 }
 
+/// <summary>
+/// 单个子UI数据
+/// </summary>
 [Serializable]
-public class SubUIControlData
+public class SubUIItemData
 {
     public string           name                = string.Empty;
-    public UIControlData    subControlData      = null;
+    public UIControlData    subUIData           = null;
 }
 
+/// <summary>
+/// 当前UI所有的绑定数据以及子UI指定
+/// </summary>
 [DisallowMultipleComponent]
 public class UIControlData : MonoBehaviour
 {
     /// <summary>
     /// 所有绑定的组件，不允许重名
     /// </summary>
-    public List<ControlItem>        controls;
+    public List<CtrlItemData>        ctrlItemDatas;
     /// <summary>
     /// 子UI数据
     /// </summary>
-    public List<SubUIControlData>     subControlDatas;
+    public List<SubUIItemData>       subUIItemDatas;
 
+    /// <summary>
+    /// 已知类型列表，如果以后有自定义类型可以加到这里并同时修改 FindCorrectComponent 方法
+    /// </summary>
     private static Dictionary<string, Type> _typeMap = new Dictionary<string, Type>()
     {
         { "Text", typeof(Text)},
@@ -75,6 +87,10 @@ public class UIControlData : MonoBehaviour
         { "Transform", typeof(Transform)},
     };
 
+    /// <summary>
+    /// 将当前数据绑定到某窗口类实例的字段，UI 加载后必须被执行
+    /// </summary>
+    /// <param name="window"></param>
     public void BindAllFields(IWindow window)
     {
         if (window == null)
@@ -88,7 +104,7 @@ public class UIControlData : MonoBehaviour
             if (fi.GetCustomAttributes(typeof(ControlBindingAttribute), false).Length == 0)
                 continue;
 
-            var objs = controls[GetIndex(fi.Name)];
+            var objs = ctrlItemDatas[GetIndex(fi.Name)];
             Type objType;
             if (!_typeMap.TryGetValue(objs.type, out objType))
                 continue;
@@ -126,7 +142,7 @@ public class UIControlData : MonoBehaviour
         if (idx == -1)
             return null;
 
-        var targets = controls[idx].targets;
+        var targets = ctrlItemDatas[idx].targets;
         if (targets.Length == 0)
             return null;
 
@@ -139,7 +155,7 @@ public class UIControlData : MonoBehaviour
         if (idx == -1)
             return null;
 
-        var targets = controls[idx].targets;
+        var targets = ctrlItemDatas[idx].targets;
         if (targets.Length == 0)
             return null;
 
@@ -152,16 +168,16 @@ public class UIControlData : MonoBehaviour
         if (idx == -1)
             return null;
 
-        return controls[idx].targets;
+        return ctrlItemDatas[idx].targets;
     }
 
     
 
     private int  GetIndex(string name)
     {
-        for (int i = 0, imax = controls.Count; i < imax; i++)
+        for (int i = 0, imax = ctrlItemDatas.Count; i < imax; i++)
         {
-            ControlItem item = controls[i];
+            CtrlItemData item = ctrlItemDatas[i];
             if (item.name == name)
             {
                 return i;
@@ -181,19 +197,19 @@ public class UIControlData : MonoBehaviour
     public bool CorrectComponents()
     {
         bool isOK = true;
-        for(int i = 0, imax = controls.Count; i < imax; i++)
+        for(int i = 0, imax = ctrlItemDatas.Count; i < imax; i++)
         {
-            if (string.IsNullOrEmpty(controls[i].name)) // TODO Check if is a valid varible name
+            if (string.IsNullOrEmpty(ctrlItemDatas[i].name)) // TODO Check if is a valid varible name
             {
                 Debug.LogErrorFormat("第 {0} 个控件没有名字，请修正", i + 1);
                 return false;
             }
 
-            for (int j = controls.Count - 1; j >= 0; j--)
+            for (int j = ctrlItemDatas.Count - 1; j >= 0; j--)
             {
-                if(controls[i].name == controls[j].name && i != j)
+                if(ctrlItemDatas[i].name == ctrlItemDatas[j].name && i != j)
                 {
-                    Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项与第 {2} 项重复，请修正", controls[i].name, i + 1, j + 1);
+                    Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项与第 {2} 项重复，请修正", ctrlItemDatas[i].name, i + 1, j + 1);
                     return false;
                 }
             }
@@ -211,15 +227,15 @@ public class UIControlData : MonoBehaviour
     /// </summary>
     private bool ReplaceTargetsToUIComponent()
     {
-        for (int i = 0, imax = controls.Count; i < imax; i++)
+        for (int i = 0, imax = ctrlItemDatas.Count; i < imax; i++)
         {
-            var objs = controls[i].targets;
+            var objs = ctrlItemDatas[i].targets;
             Type type = null;
             for(int j = 0, jmax = objs.Length; j < jmax; j++)
             {
                 if(objs[j] == null)
                 {
-                    Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项为空，请修正", controls[i].name, j + 1);
+                    Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项为空，请修正", ctrlItemDatas[i].name, j + 1);
                     return false;
                 }
 
@@ -230,7 +246,7 @@ public class UIControlData : MonoBehaviour
                 // 必须拖当前 Prefab 下的控件
                 if (!IsInCurrentPrefab((go.transform).transform))
                 {
-                    Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项不是当前 Prefab 下的控件，请修正", controls[i].name, j + 1);
+                    Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项不是当前 Prefab 下的控件，请修正", ctrlItemDatas[i].name, j + 1);
                     return false;
                 }
 
@@ -239,7 +255,7 @@ public class UIControlData : MonoBehaviour
                     type = correctComponent.GetType();
                 else if(type != correctComponent.GetType())
                 {
-                    Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项与第 1 项的类型不同，请修正", controls[i].name, j + 1);
+                    Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项与第 1 项的类型不同，请修正", ctrlItemDatas[i].name, j + 1);
                     return false;
                 }
 
@@ -249,7 +265,7 @@ public class UIControlData : MonoBehaviour
                 objs[j] = correctComponent;
             }
 
-            controls[i] = new ControlItem() { name = controls[i].name, type = type.Name, targets = objs };
+            ctrlItemDatas[i] = new CtrlItemData() { name = ctrlItemDatas[i].name, type = type.Name, targets = objs };
         }
         return true;
     }
@@ -326,9 +342,9 @@ public class UIControlData : MonoBehaviour
         StringBuilder sb = new StringBuilder(1024);
         sb.Append("#region 控件绑定变量声明，自动生成请勿手改\r\n");
 
-        for(int i = 0, imax = controls.Count; i < imax; i++)
+        for(int i = 0, imax = ctrlItemDatas.Count; i < imax; i++)
         {
-            ControlItem ctrl = controls[i];
+            CtrlItemData ctrl = ctrlItemDatas[i];
             if (ctrl.targets.Length == 0)
                 continue;
 

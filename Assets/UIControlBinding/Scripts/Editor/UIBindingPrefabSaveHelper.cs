@@ -14,14 +14,16 @@ public class UIBindingPrefabSaveHelper : UnityEditor.AssetModificationProcessor
     /// <returns></returns>
     static string[] OnWillSaveAssets(string[] paths)
     {
-
         GameObject goInHierarchy = Selection.activeGameObject;
-        UIControlData[] uiControlData = goInHierarchy.GetComponentsInChildren<UIControlData>();
-        if (uiControlData != null)
+        if(goInHierarchy != null)
         {
-            foreach (var comp in uiControlData)
+            UIControlData[] uiControlData = goInHierarchy.GetComponentsInChildren<UIControlData>();
+            if (uiControlData != null)
             {
-                bool isOK = comp.CorrectComponents();
+                foreach (var comp in uiControlData)
+                {
+                    bool isOK = comp.CorrectComponents();
+                }
             }
         }
 

@@ -7,11 +7,14 @@ using UnityEditor;
 public class UIControlDataEditor : Editor
 {
     public static GUISkin               skin;
-    private List<ControlItem>           _controls;
-    private List<SubUIControlData>      _subUIControlDatas;
-    private List<ControlItemDrawer>     _drawers;
 
-    private void Awake()
+    private List<CtrlItemData>          _ctrlItemDatas;
+    private List<SubUIItemData>         _subUIItemDatas;
+
+    private List<ControlItemDrawer>     _ctrlItemDrawers;
+    private List<SubUIItemDrawer>       _subUIItemDrawers;
+
+    void Awake()
     {
         if (EditorGUIUtility.isProSkin)
             skin = Resources.Load("Editor/UIControlDataSkinPro") as GUISkin;
@@ -28,26 +31,30 @@ public class UIControlDataEditor : Editor
         }
 
         UIControlData data = target as UIControlData;
-        if(data.controls == null)
+        if(data.ctrlItemDatas == null)
         {
-            data.controls = new List<ControlItem>();
-            data.controls.Add(new ControlItem());
+            data.ctrlItemDatas = new List<CtrlItemData>();
+            data.ctrlItemDatas.Add(new CtrlItemData());
         }
-        _controls = data.controls;
-        _subUIControlDatas = data.subControlDatas;
+        if(data.subUIItemDatas == null)
+        {
+            data.subUIItemDatas = new List<SubUIItemData>();
+        }
+
+        _ctrlItemDatas = data.ctrlItemDatas;
+        _subUIItemDatas = data.subUIItemDatas;
         CheckDrawers();
 
         EditorGUILayout.BeginVertical();
         EditorGUILayout.Space();
-        
 
+
+        // 绘制控件绑定
         EditorGUILayout.LabelField("控件绑定", skin.customStyles[0]);
-
-        
-        for (int i = 0, imax = _drawers.Count; i < imax; i++)
+        foreach (var drawer in _ctrlItemDrawers)
         {
             GUILayout.Space(10f);
-            if (!_drawers[i].Draw())
+            if (!drawer.Draw())
             {
                 Repaint();
                 return;
@@ -55,62 +62,129 @@ public class UIControlDataEditor : Editor
             GUILayout.Space(10f);
         }
 
-        // 如果有拖放则添加一个新的控件
-
         GUILayout.Space(10f);
+
+        // 绘制子UI
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField("子UI绑定", skin.customStyles[0]);
+        if(_subUIItemDrawers.Count == 0)
+        {
+            if (GUILayout.Button("+", EditorStyles.miniButton))
+            {
+                AddSubUIAfter(-1);
+                Repaint();
+                return;
+            }
+        }
+        EditorGUILayout.EndHorizontal();
+        foreach(var drawer in _subUIItemDrawers)
+        {
+            GUILayout.Space(10f);
+            if (!drawer.Draw())
+            {
+                Repaint();
+                return;
+            }
+            GUILayout.Space(10f);
+        }
+
         EditorGUILayout.EndVertical();
 
         this.Repaint();
     }
 
-    private void CheckDrawers()
+    public void AddControlAfter(ControlItemDrawer drawer)
     {
-        if (_drawers == null)
-        {
-            _drawers = new List<ControlItemDrawer>();
-            foreach(var item in _controls)
-            {
-                ControlItemDrawer drawer = new ControlItemDrawer(this, item);
-                _drawers.Add(drawer);
-            }
-        }
-    }
-
-    private void AddControl(int idx)
-    {
-        ControlItem item = new ControlItem();
-        _controls.Insert(idx + 1, item);
-
-        ControlItemDrawer drawer = new ControlItemDrawer(this, item);
-        _drawers.Insert(idx + 1, drawer);
-    }
-
-    private void RemoveControl(int idx)
-    {
-        if(_controls.Count == 1)
-        {
-            Debug.LogError("至少应保留一个变量");
-        }
-        else
-        {
-            _controls.RemoveAt(idx);
-            _drawers.RemoveAt(idx);
-        }
-    }
-
-    public void AddControl(ControlItemDrawer drawer)
-    {
-        int idx = _drawers.IndexOf(drawer);
+        int idx = _ctrlItemDrawers.IndexOf(drawer);
         Debug.Assert(idx != -1);
 
-        AddControl(idx);
+        AddControlAfter(idx);
+    }
+
+    public void AddSubUIAfter(SubUIItemDrawer drawer)
+    {
+        int idx = _subUIItemDrawers.IndexOf(drawer);
+        Debug.Assert(idx != -1);
+
+        AddSubUIAfter(idx);
     }
 
     public void RemoveControl(ControlItemDrawer drawer)
     {
-        int idx = _drawers.IndexOf(drawer);
+        int idx = _ctrlItemDrawers.IndexOf(drawer);
         Debug.Assert(idx != -1);
 
         RemoveControl(idx);
     }
+
+    public void RemoveSubUI(SubUIItemDrawer drawer)
+    {
+        int idx = _subUIItemDrawers.IndexOf(drawer);
+        Debug.Assert(idx != -1);
+
+        RemoveSubUI(idx);
+    }
+
+#region Private
+    private void CheckDrawers()
+    {
+        if (_ctrlItemDrawers == null)
+        {
+            _ctrlItemDrawers = new List<ControlItemDrawer>();
+            foreach(var item in _ctrlItemDatas)
+            {
+                ControlItemDrawer drawer = new ControlItemDrawer(this, item);
+                _ctrlItemDrawers.Add(drawer);
+            }
+        }
+
+        if(_subUIItemDrawers == null)
+        {
+            _subUIItemDrawers = new List<SubUIItemDrawer>();
+            foreach(var item in _subUIItemDatas)
+            {
+                SubUIItemDrawer drawer = new SubUIItemDrawer(this, item);
+                _subUIItemDrawers.Add(drawer);
+            }
+        }
+    }
+
+    private void AddControlAfter(int idx)
+    {
+        CtrlItemData itemData = new CtrlItemData();
+        _ctrlItemDatas.Insert(idx + 1, itemData);
+
+        ControlItemDrawer drawer = new ControlItemDrawer(this, itemData);
+        _ctrlItemDrawers.Insert(idx + 1, drawer);
+    }
+
+    private void AddSubUIAfter(int idx)
+    {
+        SubUIItemData itemData = new SubUIItemData();
+        _subUIItemDatas.Insert(idx + 1, itemData);
+
+        SubUIItemDrawer drawer = new SubUIItemDrawer(this, itemData);
+        _subUIItemDrawers.Insert(idx + 1, drawer);
+    }
+
+    private void RemoveControl(int idx)
+    {
+        if(_ctrlItemDatas.Count == 1)
+        {
+            Debug.LogError("至少应保留一个变量"); // TODO 去除此限制
+        }
+        else
+        {
+            _ctrlItemDatas.RemoveAt(idx);
+            _ctrlItemDrawers.RemoveAt(idx);
+        }
+    }
+
+    private void RemoveSubUI(int idx)
+    {
+        _subUIItemDatas.RemoveAt(idx);
+        _subUIItemDrawers.RemoveAt(idx);
+    }
+
+#endregion
 }

@@ -7,38 +7,39 @@ using System.Linq;
 public class ControlItemDrawer
 {
     private UIControlDataEditor     _container;
-    private ControlItem             _item;
+    private CtrlItemData            _itemData;
     private bool                    _foldout = true;
 
-    public ControlItemDrawer(UIControlDataEditor container, ControlItem item)
+    public ControlItemDrawer(UIControlDataEditor container, CtrlItemData item)
     {
         _container = container;
-        _item = item;
+        _itemData = item;
     }
 
     public bool Draw()
     {
         Rect rect = EditorGUILayout.BeginVertical();
+
         EditorGUILayout.BeginHorizontal();
-
-        EditorGUILayout.LabelField("变量名 ", UIControlDataEditor.skin.label);
-        _item.name = EditorGUILayout.TextField(_item.name, UIControlDataEditor.skin.textField);
-
-        EditorGUILayout.Space();
-        _foldout = EditorGUILayout.Foldout(_foldout, _foldout ? "收起" : "展开", true);
-
-        if (GUILayout.Button("+", EditorStyles.miniButton))
         {
-            _container.AddControl(this);
-            return false;
-        }
+            EditorGUILayout.LabelField("变量名 ", UIControlDataEditor.skin.label);
+            _itemData.name = EditorGUILayout.TextField(_itemData.name, UIControlDataEditor.skin.textField);
 
-        if (GUILayout.Button("-", EditorStyles.miniButton))
-        {
-            _container.RemoveControl(this);
-            return false;
+            EditorGUILayout.Space();
+            _foldout = EditorGUILayout.Foldout(_foldout, _foldout ? "收起" : "展开", true);
+
+            if (GUILayout.Button("+", EditorStyles.miniButton))
+            {
+                _container.AddControlAfter(this);
+                return false;
+            }
+
+            if (GUILayout.Button("-", EditorStyles.miniButton))
+            {
+                _container.RemoveControl(this);
+                return false;
+            }
         }
-        
         EditorGUILayout.EndHorizontal();
 
         
@@ -46,11 +47,11 @@ public class ControlItemDrawer
         if (_foldout)
         {
             EditorGUILayout.Space();
-            for (int i = 0, imax = _item.targets.Length; i < imax; i++)
+            for (int i = 0, imax = _itemData.targets.Length; i < imax; i++)
             {
-                Object obj = _item.targets[i];
+                Object obj = _itemData.targets[i];
                 EditorGUILayout.BeginHorizontal();
-                _item.targets[i] = EditorGUILayout.ObjectField(obj, typeof(Object), true);
+                _itemData.targets[i] = EditorGUILayout.ObjectField(obj, typeof(Object), true);
                 EditorGUILayout.Space(); EditorGUILayout.Space(); EditorGUILayout.Space();
                 if (GUILayout.Button("+", EditorStyles.miniButton))
                 {
@@ -59,7 +60,7 @@ public class ControlItemDrawer
                 }
                 if (GUILayout.Button("-", EditorStyles.miniButton))
                 {
-                    if(_item.targets.Length == 1)
+                    if(_itemData.targets.Length == 1)
                     {
                         Debug.LogError("至少应保留一个控件");
                         return false;
@@ -90,39 +91,39 @@ public class ControlItemDrawer
     private void PostProcess()
     {
         // 默认将新添加的第一个控件的名字作为变量名
-        if (_item.targets.Length > 0 && _item.targets[0] != null && string.IsNullOrEmpty(_item.name))
-            _item.name = _item.targets[0].name;
+        if (_itemData.targets.Length > 0 && _itemData.targets[0] != null && string.IsNullOrEmpty(_itemData.name))
+            _itemData.name = _itemData.targets[0].name;
     }
 
     private void InsertItem(int idx)
     {
-        Object[] newArr = new Object[_item.targets.Length + 1];
+        Object[] newArr = new Object[_itemData.targets.Length + 1];
         for(int i = 0; i < idx; i++)
         {
-            newArr[i] = _item.targets[i];
+            newArr[i] = _itemData.targets[i];
         }
         newArr[idx] = new Object();
         for(int i = idx + 1; i < newArr.Length; i++)
         {
-            newArr[i] = _item.targets[i - 1];
+            newArr[i] = _itemData.targets[i - 1];
         }
 
-        _item.targets = newArr;
+        _itemData.targets = newArr;
     }
 
     private void RemoveItem(int idx)
     {
-        Object[] newArr = new Object[_item.targets.Length - 1];
+        Object[] newArr = new Object[_itemData.targets.Length - 1];
         for(int i = 0; i < idx; i++)
         {
-            newArr[i] = _item.targets[i];
+            newArr[i] = _itemData.targets[i];
         }
 
         for(int i = idx; i < newArr.Length; i++)
         {
-            newArr[idx] = _item.targets[i + 1];
+            newArr[idx] = _itemData.targets[i + 1];
         }
 
-        _item.targets = newArr;
+        _itemData.targets = newArr;
     }
 }
