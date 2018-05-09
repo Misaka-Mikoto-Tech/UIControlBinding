@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using System;
 
 namespace SDGame.UITools
 {
@@ -9,6 +10,10 @@ namespace SDGame.UITools
     public class UIControlDataEditor : Editor
     {
         public static GUISkin               skin;
+        public static GUIStyle              popupAlignLeft; // TODO 挪出去一个 SkinManager
+
+        public string[]                     allTypeNames;
+        public Type[]                       allTypes;
 
         private List<CtrlItemData>          _ctrlItemDatas;
         private List<SubUIItemData>         _subUIItemDatas;
@@ -18,10 +23,22 @@ namespace SDGame.UITools
 
         void Awake()
         {
-            if (EditorGUIUtility.isProSkin)
-                skin = Resources.Load("Editor/UIControlDataSkinPro") as GUISkin;
-            else
-                skin = Resources.Load("Editor/UIControlDataSkinPersonal") as GUISkin;
+            if(skin == null)
+            {
+                if (EditorGUIUtility.isProSkin)
+                    skin = Resources.Load("Editor/UIControlDataSkinPro") as GUISkin;
+                else
+                    skin = Resources.Load("Editor/UIControlDataSkinPersonal") as GUISkin;
+            }
+            
+            if(popupAlignLeft == null)
+            {
+                popupAlignLeft = new GUIStyle("Popup");
+                popupAlignLeft.alignment = TextAnchor.MiddleLeft;
+            }
+
+            allTypeNames = UIControlData.GetAllTypeNames();
+            allTypes = UIControlData.GetAllTypes();
         }
 
         public override void OnInspectorGUI()
@@ -140,9 +157,10 @@ namespace SDGame.UITools
         {
             if (_ctrlItemDrawers == null)
             {
-                _ctrlItemDrawers = new List<ControlItemDrawer>();
+                _ctrlItemDrawers = new List<ControlItemDrawer>(100);
                 foreach(var item in _ctrlItemDatas)
                 {
+                    item.type = string.Empty; // 初次加载时把类型全置空，以便可以自动计算类型
                     ControlItemDrawer drawer = new ControlItemDrawer(this, item);
                     _ctrlItemDrawers.Add(drawer);
                 }
@@ -150,7 +168,7 @@ namespace SDGame.UITools
 
             if(_subUIItemDrawers == null)
             {
-                _subUIItemDrawers = new List<SubUIItemDrawer>();
+                _subUIItemDrawers = new List<SubUIItemDrawer>(100);
                 foreach(var item in _subUIItemDatas)
                 {
                     SubUIItemDrawer drawer = new SubUIItemDrawer(this, item);

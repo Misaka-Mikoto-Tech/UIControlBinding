@@ -11,6 +11,7 @@ namespace SDGame.UITools
         private UIControlDataEditor     _container;
         private CtrlItemData            _itemData;
         private bool                    _foldout = true;
+        private int                     _controlTypeIdx = 0;
 
         public ControlItemDrawer(UIControlDataEditor container, CtrlItemData item)
         {
@@ -24,7 +25,7 @@ namespace SDGame.UITools
 
             EditorGUILayout.BeginHorizontal();
             {
-                EditorGUILayout.LabelField("变量名 ", UIControlDataEditor.skin.label);
+                EditorGUILayout.LabelField("变量名 ", UIControlDataEditor.skin.label, GUILayout.Width(60f));
                 _itemData.name = EditorGUILayout.TextField(_itemData.name, UIControlDataEditor.skin.textField);
 
                 EditorGUILayout.Space();
@@ -41,19 +42,44 @@ namespace SDGame.UITools
                     _container.RemoveControl(this);
                     return false;
                 }
+                GUILayout.FlexibleSpace();
             }
             EditorGUILayout.EndHorizontal();
 
-        
             // 控件列表
             if (_foldout)
             {
+                EditorGUILayout.BeginHorizontal();
+                {
+                    EditorGUILayout.LabelField("变量类型 ", UIControlDataEditor.skin.label, GUILayout.Width(60f));
+
+                    EditorGUI.BeginChangeCheck();
+                    _controlTypeIdx = EditorGUILayout.Popup(_controlTypeIdx, _container.allTypeNames, UIControlDataEditor.popupAlignLeft);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        if(_controlTypeIdx != 0)
+                        {
+                            if (!ChangeControlsTypeTo(_controlTypeIdx))
+                                _controlTypeIdx = 0; // 切换失败，重置回自动
+                        }
+                        else // 被重置回了自动
+                            _itemData.type = string.Empty;
+
+                        return false;
+                    }
+
+                    GUILayout.FlexibleSpace();
+                }
+                EditorGUILayout.EndHorizontal();
+
+
                 EditorGUILayout.Space();
                 for (int i = 0, imax = _itemData.targets.Length; i < imax; i++)
                 {
                     Object obj = _itemData.targets[i];
                     EditorGUILayout.BeginHorizontal();
                     _itemData.targets[i] = EditorGUILayout.ObjectField(obj, typeof(Object), true);
+
                     EditorGUILayout.Space(); EditorGUILayout.Space(); EditorGUILayout.Space();
                     if (GUILayout.Button("+", EditorStyles.miniButton))
                     {
@@ -104,7 +130,7 @@ namespace SDGame.UITools
             {
                 newArr[i] = _itemData.targets[i];
             }
-            newArr[idx] = new Object();
+            newArr[idx] = null;
             for(int i = idx + 1; i < newArr.Length; i++)
             {
                 newArr[i] = _itemData.targets[i - 1];
@@ -127,6 +153,58 @@ namespace SDGame.UITools
             }
 
             _itemData.targets = newArr;
+        }
+
+        /// <summary>
+        /// 将控件切换到指定类型
+        /// </summary>
+        /// <param name="typeIdx"></param>
+        private bool ChangeControlsTypeTo(int typeIdx)
+        {
+            System.Type targetType = _container.allTypes[typeIdx];
+            string targetTypeName = _container.allTypeNames[typeIdx];
+            bool isGameObject = targetType == typeof(GameObject);
+
+
+            for(int i = 0, imax = _itemData.targets.Length; i < imax; i++)
+            {
+                Object obj = _itemData.targets[i];
+                if (obj == null)
+                {
+                    Debug.LogErrorFormat("[{0}.{1}] control[{2}] is null"
+                        , _container.target.name, _itemData.name, i);
+                    return false;
+                }
+
+                if(obj.GetType() != typeof(GameObject))
+                {
+                    if((obj as Component) == null)
+                    {
+                        Debug.LogErrorFormat("[{0}.{1}] control[{2}] [{3}] must be GameObject or a Component"
+                            , _container.target.name, _itemData.name, i, obj.name);
+                        return false;
+                    }
+                    obj = (obj as Component).gameObject;
+                }
+
+                GameObject go = obj as GameObject;
+                if (isGameObject)
+                    _itemData.targets[i] = go;
+                else
+                {
+                    Component comp = go.GetComponent(targetType);
+                    if(comp == null)
+                    {
+                        Debug.LogErrorFormat("[{0}.{1}] control[{2}] [{3}] isn't a {4}"
+                            , _container.target.name, _itemData.name, i, go.name, targetTypeName);
+                        return false;
+                    }
+                    _itemData.targets[i] = comp;
+                }
+            }
+
+            _itemData.type = targetTypeName;
+            return true;
         }
     }
 

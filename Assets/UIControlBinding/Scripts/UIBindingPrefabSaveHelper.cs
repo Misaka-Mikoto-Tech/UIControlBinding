@@ -1,9 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
 using System;
 using System.Reflection;
+
+#if UNITY_EDITOR
+using UnityEditor;
 
 namespace SDGame.UITools
 {
@@ -73,3 +75,4 @@ namespace SDGame.UITools
     }
 
 }
+#endif

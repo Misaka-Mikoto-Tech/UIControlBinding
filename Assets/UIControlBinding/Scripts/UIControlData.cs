@@ -25,6 +25,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Text;
+using UnityEngine.Serialization;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -40,7 +41,7 @@ namespace SDGame.UITools
     {
         public string                       name = string.Empty;
         [HideInInspector]
-        public string                       type = string.Empty;
+        public string                       type = string.Empty; // TODO 改成 hash
         public UnityEngine.Object[]         targets = new UnityEngine.Object[1];
     }
 
@@ -87,13 +88,14 @@ namespace SDGame.UITools
             { "Image", typeof(Image)},
             { "RectTransform", typeof(RectTransform)},
             { "Transform", typeof(Transform)},
+            { "GameObject", typeof(GameObject)},
         };
 
         /// <summary>
         /// 将当前数据绑定到某窗口类实例的字段，UI 加载后必须被执行
         /// </summary>
         /// <param name="window"></param>
-        public void BindAllFields(IWindow window)
+        public void BindAllFields(object window)
         {
             if (window == null)
                 return;
@@ -110,7 +112,33 @@ namespace SDGame.UITools
             }
         }
 
-        private void BindCtrl(IWindow window, FieldInfo fi)
+        /// <summary>
+        /// 添加自定义控件类型
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="type"></param>
+        public static void AddCustomType(string name, Type type)
+        {
+
+        }
+
+        public static string[] GetAllTypeNames()
+        {
+            string[] keys = new string[_typeMap.Count + 1];
+            keys[0] = "自动";
+            _typeMap.Keys.CopyTo(keys, 1);
+            return keys;
+        }
+
+        public static Type[] GetAllTypes()
+        {
+            Type[] types = new Type[_typeMap.Count + 1];
+            types[0] = typeof(UnityEngine.Object);
+            _typeMap.Values.CopyTo(types, 1);
+            return types;
+        }
+
+        private void BindCtrl(object window, FieldInfo fi)
         {
             int itemIdx = GetCtrlIndex(fi.Name);
             if (itemIdx == -1)
@@ -143,7 +171,7 @@ namespace SDGame.UITools
             }
         }
 
-        private void BindSubUI(IWindow window, FieldInfo fi)
+        private void BindSubUI(object window, FieldInfo fi)
         {
             int subUIIdx = GetSubUIIndex(fi.Name);
             if(subUIIdx == -1)
@@ -295,6 +323,13 @@ namespace SDGame.UITools
                         Debug.LogErrorFormat("[{0}]第 {1} 个子UI没有赋值, 请修正", gameObject.name, i + 1);
                         return false;
                     }
+
+                    // 必须拖当前 Prefab 下的子UI
+                    if (!IsInCurrentPrefab(subUI.subUIData.transform))
+                    {
+                        Debug.LogErrorFormat("第 {1} 个子UI不是当前 Prefab 下的对象，请修正", i + 1, subUI.name);
+                        return false;
+                    }
                 }
                 else
                 {
@@ -327,13 +362,14 @@ namespace SDGame.UITools
                         go = (objs[j] as Component).gameObject;
 
                     // 必须拖当前 Prefab 下的控件
-                    if (!IsInCurrentPrefab((go.transform).transform))
+                    if (!IsInCurrentPrefab(go.transform))
                     {
                         Debug.LogErrorFormat("控件名字 [{0}] 第 {1} 项不是当前 Prefab 下的控件，请修正", ctrlItemDatas[i].name, j + 1);
                         return false;
                     }
 
-                    var correctComponent = FindCorrectComponent(go);
+                    UnityEngine.Object correctComponent = FindCorrectComponent(go, ctrlItemDatas[i].type);
+
                     if (type == null)
                         type = correctComponent.GetType();
                     else if(type != correctComponent.GetType())
@@ -348,7 +384,7 @@ namespace SDGame.UITools
                     objs[j] = correctComponent;
                 }
 
-                ctrlItemDatas[i] = new CtrlItemData() { name = ctrlItemDatas[i].name, type = type.Name, targets = objs };
+                ctrlItemDatas[i].type = type.Name;
             }
             return true;
         }
@@ -364,60 +400,35 @@ namespace SDGame.UITools
             return false;
         }
 
-        private UnityEngine.Object FindCorrectComponent(GameObject go)
+        private UnityEngine.Object FindCorrectComponent(GameObject go, string targetType)
         {
+            if (targetType == "GameObject")
+                return go;
+
             List<Component> components = new List<Component>();
             go.GetComponents(components);
 
             Component newComp = null;
 
-            for (int i = 0, imax = components.Count; i < imax; i++)
+            foreach(var kv in _typeMap) // 按类型列表里的顺序从上往下找
             {
-                Component tmp = components[i];
-            
-                Type type = tmp.GetType();
-
-                if (type == typeof(Text))
-                    newComp = go.GetComponent<Text>();
-                else if (type == typeof(RawImage))
-                    newComp = go.GetComponent<RawImage>();
-                else if (type == typeof(Button))
-                    newComp = go.GetComponent<Button>();
-                else if (type == typeof(Toggle))
-                    newComp = go.GetComponent<Toggle>();
-                else if (type == typeof(Slider))
-                    newComp = go.GetComponent<Slider>();
-                else if (type == typeof(Scrollbar))
-                    newComp = go.GetComponent<Scrollbar>();
-                else if (type == typeof(Dropdown))
-                    newComp = go.GetComponent<Dropdown>();
-                else if (type == typeof(InputField))
-                    newComp = go.GetComponent<InputField>();
-                else if (type == typeof(Canvas))
-                    newComp = go.GetComponent<Canvas>();
-                //else if (type == typeof(Panel))
-                //    newComp = go.GetComponent<Panel>();
-                else if (type == typeof(ScrollRect))
-                    newComp = go.GetComponent<ScrollRect>();
-                else if (type == typeof(Image))
-                    newComp = go.GetComponent<Image>();
-
-                // 很多组件上都有 Image，因此即使找到 Image 也不停止
-                if (newComp != null && type != typeof(Image))
+                bool isFound = false;
+                foreach(var comp in components)
+                {
+                    if(kv.Value == comp.GetType())
+                    {
+                        newComp = comp;
+                        isFound = true;
+                        break;
+                    }
+                }
+                if (isFound)
                     break;
-            }
-
-            if(newComp == null)
-            {
-                newComp = go.GetComponent<RectTransform>();
-                if (newComp == null)
-                    newComp = go.GetComponent<Transform>();
             }
 
             return newComp;
         }
 
-    
 
         [ContextMenu("复制代码到剪贴板(Private)")]
         public void CopyCodeToClipBoardPrivate()
@@ -433,6 +444,8 @@ namespace SDGame.UITools
 
         private void CopyCodeToClipBoardImpl(bool isPublic)
         {
+            UIBindingPrefabSaveHelper.SavePrefab(gameObject);
+
             string strVarAcc = isPublic ? "public" : "private";
 
             StringBuilder sb = new StringBuilder(1024);
