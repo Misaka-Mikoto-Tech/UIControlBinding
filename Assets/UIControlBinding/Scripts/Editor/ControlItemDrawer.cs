@@ -53,6 +53,9 @@ namespace SDGame.UITools
                 {
                     EditorGUILayout.LabelField("变量类型 ", UIControlDataEditor.skin.label, GUILayout.Width(60f));
 
+                    if (_controlTypeIdx == 0 && !string.IsNullOrEmpty(_itemData.type))
+                        _controlTypeIdx = FindTypeIdx(_itemData.type);
+
                     EditorGUI.BeginChangeCheck();
                     _controlTypeIdx = EditorGUILayout.Popup(_controlTypeIdx, _container.allTypeNames, UIControlDataEditor.popupAlignLeft);
                     if (EditorGUI.EndChangeCheck())
@@ -121,6 +124,17 @@ namespace SDGame.UITools
             // 默认将新添加的第一个控件的名字作为变量名
             if (_itemData.targets.Length > 0 && _itemData.targets[0] != null && string.IsNullOrEmpty(_itemData.name))
                 _itemData.name = _itemData.targets[0].name;
+        }
+
+        private int FindTypeIdx(string typeName)
+        {
+            string[] allTypeNames = _container.allTypeNames;
+            for (int i = 0, imax = allTypeNames.Length; i < imax; i++)
+            {
+                if(allTypeNames[i] == typeName)
+                    return i;
+            }
+            return 0;
         }
 
         private void InsertItem(int idx)

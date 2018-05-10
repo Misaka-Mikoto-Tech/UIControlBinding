@@ -160,7 +160,6 @@ namespace SDGame.UITools
                 _ctrlItemDrawers = new List<ControlItemDrawer>(100);
                 foreach(var item in _ctrlItemDatas)
                 {
-                    item.type = string.Empty; // 初次加载时把类型全置空，以便可以自动计算类型
                     ControlItemDrawer drawer = new ControlItemDrawer(this, item);
                     _ctrlItemDrawers.Add(drawer);
                 }
