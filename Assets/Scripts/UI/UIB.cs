@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using SDGame.UITools;
 
-public class UIB : IWindow
+public class UIB : IBindableUI
 {
     #region 控件绑定变量声明，自动生成请勿手改
     [ControlBinding]

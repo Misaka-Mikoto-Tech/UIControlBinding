@@ -94,21 +94,21 @@ namespace SDGame.UITools
         /// <summary>
         /// 将当前数据绑定到某窗口类实例的字段，UI 加载后必须被执行
         /// </summary>
-        /// <param name="window"></param>
-        public void BindAllFields(object window)
+        /// <param name="ui">需要绑定数据的 UI</param>
+        public void BindDataTo(IBindableUI ui)
         {
-            if (window == null)
+            if (ui == null)
                 return;
 
-            FieldInfo[] fis = window.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo[] fis = ui.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
             for(int i = 0, imax = fis.Length; i < imax; i++)
             {
                 FieldInfo fi = fis[i];
             
                 if (fi.GetCustomAttributes(typeof(ControlBindingAttribute), false).Length != 0)
-                    BindCtrl(window, fi);
+                    BindCtrl(ui, fi);
                 else if (fi.GetCustomAttributes(typeof(SubUIBindingAttribute), false).Length != 0)
-                    BindSubUI(window, fi);
+                    BindSubUI(ui, fi);
             }
         }
 
@@ -138,7 +138,7 @@ namespace SDGame.UITools
             return types;
         }
 
-        private void BindCtrl(object window, FieldInfo fi)
+        private void BindCtrl(IBindableUI ui, FieldInfo fi)
         {
             int itemIdx = GetCtrlIndex(fi.Name);
             if (itemIdx == -1)
@@ -162,16 +162,16 @@ namespace SDGame.UITools
                 {
                     arrObj.SetValue(objs.targets[j], j);
                 }
-                fi.SetValue(window, arrObj);
+                fi.SetValue(ui, arrObj);
             }
             else
             {
                 UnityEngine.Object component = GetComponent(itemIdx);
-                fi.SetValue(window, component);
+                fi.SetValue(ui, component);
             }
         }
 
-        private void BindSubUI(object window, FieldInfo fi)
+        private void BindSubUI(IBindableUI ui, FieldInfo fi)
         {
             int subUIIdx = GetSubUIIndex(fi.Name);
             if(subUIIdx == -1)
@@ -180,7 +180,7 @@ namespace SDGame.UITools
                 return;
             }
 
-            fi.SetValue(window, subUIItemDatas[subUIIdx].subUIData);
+            fi.SetValue(ui, subUIItemDatas[subUIIdx].subUIData);
         }
 
     #region Get,不建议使用
@@ -463,6 +463,16 @@ namespace SDGame.UITools
             return newComp;
         }
 
+        private bool IsNeedSave()
+        {
+            foreach(var ctrl in ctrlItemDatas)
+            {
+                if (string.IsNullOrEmpty(ctrl.type))
+                    return true;
+            }
+            return false;
+        }
+
 
         [ContextMenu("复制代码到剪贴板(Private)")]
         public void CopyCodeToClipBoardPrivate()
@@ -478,7 +488,9 @@ namespace SDGame.UITools
 
         private void CopyCodeToClipBoardImpl(bool isPublic)
         {
-            //UIBindingPrefabSaveHelper.SavePrefab(gameObject); // 调用保存资源会导致 prefab 发生变化，所以请自己点 Apply 吧
+            // 调用保存资源会导致 prefab 发生变化，因此只有有需要时才保存
+            if (IsNeedSave())
+                UIBindingPrefabSaveHelper.SavePrefab(gameObject);
 
             string strVarAcc = isPublic ? "public" : "private";
 

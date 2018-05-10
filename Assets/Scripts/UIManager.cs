@@ -10,13 +10,13 @@ public class UIManager : UnitySingleton<UIManager>
 
 	void Start () {
         // TODO get config from xml
-        IWindow uiA = Activator.CreateInstance(Type.GetType("UIA")) as IWindow;
+        IBindableUI uiA = Activator.CreateInstance(Type.GetType("UIA")) as IBindableUI;
         GameObject prefab = Resources.Load<GameObject>("UI/UIA");
         GameObject go = Instantiate(prefab);
         UIControlData ctrlData = go.GetComponent<UIControlData>();
         if(ctrlData != null)
         {
-            ctrlData.BindAllFields(uiA);
+            ctrlData.BindDataTo(uiA);
         }
 
         (uiA as UIA).CheckBinding();
