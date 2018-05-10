@@ -6,13 +6,13 @@
 
     UIManager 加载示例：
     `` C#
-        IWindow uiA = Activator.CreateInstance(Type.GetType("UIA")) as IWindow;
+        IBindableUI uiA = Activator.CreateInstance(Type.GetType("UIA")) as IBindableUI;
         GameObject prefab = Resources.Load<GameObject>("UI/UIA"); // you can get ui config from config file
         GameObject go = Instantiate(prefab);
         UIControlData ctrlData = go.GetComponent<UIControlData>();
         if(ctrlData != null)
         {
-            ctrlData.BindAllFields(uiA);
+            ctrlData.BindDataTo(uiA);
         }
     ``
 
