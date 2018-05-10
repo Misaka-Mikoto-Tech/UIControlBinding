@@ -10,6 +10,7 @@
 ## 操作示意图
 ### 拼完界面
 ![image](Preview/AddComponent.png)
+![image](Preview/ChangeType.png)
 ### 编写逻辑代码时
 ![image](Preview/CopyCode.png)
 

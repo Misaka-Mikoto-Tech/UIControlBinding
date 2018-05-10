@@ -478,7 +478,7 @@ namespace SDGame.UITools
 
         private void CopyCodeToClipBoardImpl(bool isPublic)
         {
-            UIBindingPrefabSaveHelper.SavePrefab(gameObject);
+            //UIBindingPrefabSaveHelper.SavePrefab(gameObject); // 调用保存资源会导致 prefab 发生变化，所以请自己点 Apply 吧
 
             string strVarAcc = isPublic ? "public" : "private";
 
