@@ -85,6 +85,13 @@ namespace SDGame.UITools
             { "InputField", typeof(InputField)},
             { "Canvas", typeof(Canvas)},
             { "ScrollRect", typeof(ScrollRect)},
+
+            ////////自定义控件类型请放这里////////
+
+
+
+            //////////////////////////////////////
+
             { "Image", typeof(Image)},
             { "RectTransform", typeof(RectTransform)},
             { "Transform", typeof(Transform)},
@@ -110,16 +117,6 @@ namespace SDGame.UITools
                 else if (fi.GetCustomAttributes(typeof(SubUIBindingAttribute), false).Length != 0)
                     BindSubUI(ui, fi);
             }
-        }
-
-        /// <summary>
-        /// 添加自定义控件类型
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="type"></param>
-        public static void AddCustomType(string name, Type type)
-        {
-            _typeMap.Add(name, type);
         }
 
         public static string[] GetAllTypeNames()
