@@ -145,14 +145,11 @@ namespace SDGame.UITools
             }
 
             var objs = ctrlItemDatas[itemIdx];
-            Type objType;
-            if (!_typeMap.TryGetValue(objs.type, out objType))
-                return;
 
             Type fieldType = fi.FieldType;
             if (fieldType.IsArray)
             {
-                Array arrObj = Array.CreateInstance(objType, objs.targets.Length);
+                Array arrObj = Array.CreateInstance(fieldType.GetElementType(), objs.targets.Length);
 
                 // 给数组元素设置数据
                 for (int j = 0, jmax = objs.targets.Length; j < jmax; j++)
