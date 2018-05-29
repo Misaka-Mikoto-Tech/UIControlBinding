@@ -40,8 +40,10 @@ namespace SDGame.UITools
     public class CtrlItemData
     {
         public string                       name = string.Empty;
+#if UNITY_EDITOR
         [HideInInspector]
-        public string                       type = string.Empty; // TODO 改成 hash
+        public string                       type = string.Empty;
+#endif
         public UnityEngine.Object[]         targets = new UnityEngine.Object[1];
     }
 
