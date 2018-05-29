@@ -85,6 +85,7 @@ namespace SDGame.UITools
             { "InputField", typeof(InputField)},
             { "Canvas", typeof(Canvas)},
             { "ScrollRect", typeof(ScrollRect)},
+            { "SpriteRenderer", typeof(SpriteRenderer)},
 
             ////////自定义控件类型请放这里////////
 
