@@ -26,6 +26,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Text;
 using UnityEngine.Serialization;
+using XLua;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -101,6 +102,23 @@ namespace SDGame.UITools
             { "GameObject", typeof(GameObject)},
         };
 
+        public static string[] GetAllTypeNames()
+        {
+            string[] keys = new string[_typeMap.Count + 1];
+            keys[0] = "自动";
+            _typeMap.Keys.CopyTo(keys, 1);
+            return keys;
+        }
+
+        public static Type[] GetAllTypes()
+        {
+            Type[] types = new Type[_typeMap.Count + 1];
+            types[0] = typeof(UnityEngine.Object);
+            _typeMap.Values.CopyTo(types, 1);
+            return types;
+        }
+
+        #region BindDataToC#UI
         /// <summary>
         /// 将当前数据绑定到某窗口类实例的字段，UI 加载后必须被执行
         /// </summary>
@@ -120,22 +138,6 @@ namespace SDGame.UITools
                 else if (fi.GetCustomAttributes(typeof(SubUIBindingAttribute), false).Length != 0)
                     BindSubUI(ui, fi);
             }
-        }
-
-        public static string[] GetAllTypeNames()
-        {
-            string[] keys = new string[_typeMap.Count + 1];
-            keys[0] = "自动";
-            _typeMap.Keys.CopyTo(keys, 1);
-            return keys;
-        }
-
-        public static Type[] GetAllTypes()
-        {
-            Type[] types = new Type[_typeMap.Count + 1];
-            types[0] = typeof(UnityEngine.Object);
-            _typeMap.Values.CopyTo(types, 1);
-            return types;
         }
 
         private void BindCtrl(IBindableUI ui, FieldInfo fi)
@@ -179,8 +181,45 @@ namespace SDGame.UITools
 
             fi.SetValue(ui, subUIItemDatas[subUIIdx].subUIData);
         }
+        #endregion
 
-    #region Get,不建议使用
+        #region BindDataToLuaTable
+        public void BindDataToLua(LuaTable luaTable)
+        {
+            if (luaTable == null)
+                return;
+
+            foreach(var itemData in ctrlItemDatas)
+            {
+                var targets = itemData.targets;
+                if(targets.Length == 0)
+                {
+                    Debug.LogErrorFormat("control {0} is null", itemData.name);
+                    continue;
+                }
+
+                if(targets.Length == 1)
+                {
+                    luaTable.Set(itemData.name, itemData.targets[0]);
+                }
+                else
+                {
+                    LuaTable tmpTbl = luaTable.env.NewTable();
+                    for(int i = 0, imax = targets.Length; i < imax; i++)
+                        tmpTbl.Set(i + 1, targets[i]);
+
+                    luaTable.Set(itemData.name, tmpTbl);
+                }
+            }
+
+            foreach(var subUI in subUIItemDatas)
+            {
+                luaTable.Set(subUI.name, subUI.subUIData);
+            }
+        }
+        #endregion
+
+        #region Get,不建议使用
 
         /// <summary>
         /// 找到指定名称的第一个组件, 不存在返回 null
@@ -518,7 +557,7 @@ namespace SDGame.UITools
 
 
     #endif
-        #endregion
+    #endregion
     }
 
 }
