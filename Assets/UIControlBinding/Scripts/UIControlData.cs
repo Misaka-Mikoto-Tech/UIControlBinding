@@ -74,7 +74,7 @@ namespace SDGame.UITools
         public List<SubUIItemData>       subUIItemDatas;
 
         /// <summary>
-        /// 已知类型列表，如果以后有自定义类型可以调用 AddCustomType 方法添加
+        /// 已知类型列表，自定义类型可以添加到下面指定区域
         /// </summary>
         private static Dictionary<string, Type> _typeMap = new Dictionary<string, Type>()
         {
@@ -554,10 +554,39 @@ namespace SDGame.UITools
             GUIUtility.systemCopyBuffer = sb.ToString();
         }
 
+        [ContextMenu("复制代码到剪贴板(Lua)")]
+        public void CopyCodeToClipBoardLua()
+        {
+            // 调用保存资源会导致 prefab 发生变化，因此只有有需要时才保存
+            if (IsNeedSave())
+                UIBindingPrefabSaveHelper.SavePrefab(gameObject);
+
+            StringBuilder sb = new StringBuilder(1024);
+            sb.Append("-- 控件绑定变量声明，自动生成请勿手改\r\n");
+
+            foreach (var ctrl in ctrlItemDatas)
+            {
+                if (ctrl.targets.Length == 0)
+                    continue;
+
+                sb.AppendFormat("local {0}\r\n", ctrl.name);
+            }
+
+            sb.AppendFormat("\r\n");
+            sb.AppendFormat("-- SubUI\r\n");
+            foreach (var subUI in subUIItemDatas)
+            {
+                sb.AppendFormat("local {0}\r\n", subUI.name);
+            }
+            sb.Append("-- 控件绑定定义结束\r\n\r\n");
+
+            GUIUtility.systemCopyBuffer = sb.ToString();
+        }
 
 
-    #endif
-    #endregion
+
+#endif
+        #endregion
     }
 
 }
