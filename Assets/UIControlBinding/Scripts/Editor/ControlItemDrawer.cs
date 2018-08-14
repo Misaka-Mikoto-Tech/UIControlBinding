@@ -26,7 +26,7 @@ namespace SDGame.UITools
             EditorGUILayout.BeginHorizontal();
             {
                 EditorGUILayout.LabelField("变量名 ", UIControlDataEditor.skin.label, GUILayout.Width(60f));
-                _itemData.name = EditorGUILayout.TextField(_itemData.name, UIControlDataEditor.skin.textField);
+                _itemData.name = EditorGUILayout.TextField(_itemData.name, UIControlDataEditor.skin.textField).Trim();
 
                 EditorGUILayout.Space();
                 _foldout = EditorGUILayout.Foldout(_foldout, _foldout ? "收起" : "展开", true);
@@ -123,7 +123,7 @@ namespace SDGame.UITools
         {
             // 默认将新添加的第一个控件的名字作为变量名
             if (_itemData.targets.Length > 0 && _itemData.targets[0] != null && string.IsNullOrEmpty(_itemData.name))
-                _itemData.name = _itemData.targets[0].name;
+                _itemData.name = _itemData.targets[0].name.Trim();
         }
 
         private int FindTypeIdx(string typeName)

@@ -24,7 +24,7 @@ namespace SDGame.UITools
                 EditorGUILayout.BeginHorizontal();
                 {
                     EditorGUILayout.LabelField("子UI名 ", UIControlDataEditor.skin.label);
-                    _itemData.name = EditorGUILayout.TextField(_itemData.name, UIControlDataEditor.skin.textField);
+                    _itemData.name = EditorGUILayout.TextField(_itemData.name, UIControlDataEditor.skin.textField).Trim();
                     EditorGUILayout.Space();
                     _foldout = EditorGUILayout.Foldout(_foldout, _foldout ? "收起" : "展开", true);
 
@@ -64,7 +64,7 @@ namespace SDGame.UITools
         {
             // 默认将控件的名字作为变量名
             if (_itemData.subUIData != null && string.IsNullOrEmpty(_itemData.name))
-                _itemData.name = _itemData.subUIData.name;
+                _itemData.name = _itemData.subUIData.name.Trim();
         }
     }
 
