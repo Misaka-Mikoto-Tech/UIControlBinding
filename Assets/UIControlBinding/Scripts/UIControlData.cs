@@ -513,22 +513,26 @@ namespace SDGame.UITools
         [ContextMenu("复制代码到剪贴板(Private)")]
         public void CopyCodeToClipBoardPrivate()
         {
-            CopyCodeToClipBoardImpl(false);
+            CopyCodeToClipBoardImpl("private");
+        }
+
+        [ContextMenu("复制代码到剪贴板(Protected)")]
+        public void CopyCodeToClipBoardProtected()
+        {
+            CopyCodeToClipBoardImpl("protected");
         }
 
         [ContextMenu("复制代码到剪贴板(Public)")]
         public void CopyCodeToClipBoardPublic()
         {
-            CopyCodeToClipBoardImpl(true);
+            CopyCodeToClipBoardImpl("public");
         }
 
-        private void CopyCodeToClipBoardImpl(bool isPublic)
+        private void CopyCodeToClipBoardImpl(string accessLevel)
         {
             // 调用保存资源会导致 prefab 发生变化，因此只有有需要时才保存
             if (IsNeedSave())
                 UIBindingPrefabSaveHelper.SavePrefab(gameObject);
-
-            string strVarAcc = isPublic ? "public" : "private";
 
             StringBuilder sb = new StringBuilder(1024);
             sb.Append("#region 控件绑定变量声明，自动生成请勿手改\r\n");
@@ -539,15 +543,15 @@ namespace SDGame.UITools
                     continue;
 
                 if (ctrl.targets.Length == 1)
-                    sb.AppendFormat("\t\t[ControlBinding]\r\n\t\t{0} {1} {2};\r\n", strVarAcc, ctrl.type, ctrl.name);
+                    sb.AppendFormat("\t\t[ControlBinding]\r\n\t\t{0} {1} {2};\r\n", accessLevel, ctrl.type, ctrl.name);
                 else
-                    sb.AppendFormat("\t\t[ControlBinding]\r\n\t\t{0} {1}[] {2};\r\n", strVarAcc, ctrl.type, ctrl.name);
+                    sb.AppendFormat("\t\t[ControlBinding]\r\n\t\t{0} {1}[] {2};\r\n", accessLevel, ctrl.type, ctrl.name);
             }
 
             sb.AppendFormat("\r\n");
             foreach(var subUI in subUIItemDatas)
             {
-                sb.AppendFormat("\t\t[SubUIBinding]\r\n\t\t{0} UIControlData {1};\r\n", strVarAcc, subUI.name);
+                sb.AppendFormat("\t\t[SubUIBinding]\r\n\t\t{0} UIControlData {1};\r\n", accessLevel, subUI.name);
             }
             sb.Append("#endregion\r\n\r\n");
 
