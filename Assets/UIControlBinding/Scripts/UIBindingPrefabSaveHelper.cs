@@ -26,8 +26,8 @@ namespace SDGame.UITools
                 {
                     foreach (var comp in uiControlData)
                     {
-                        bool isOK = comp.CorrectComponents();
-                        isOK = comp.CheckSubUIs();
+                        comp.CorrectComponents();
+                        comp.CheckSubUIs();
                     }
                 }
             }

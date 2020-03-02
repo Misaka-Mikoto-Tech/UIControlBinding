@@ -1,5 +1,5 @@
 ﻿/*
-    URL: https://github.com/easy66/UIControlBinding
+    URL: https://github.com/Misaka-Mikoto-Tech/UIControlBinding
     使用方法:
     UE: 将此脚本添加到UI根节点，与程序协商好需要绑定的控件及其变量名后，将需要绑定的控件拖到脚本上
     程序: 点此脚本右上角的齿轮，点 "复制代码到剪贴板" 按钮
@@ -19,14 +19,13 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Text;
-using UnityEngine.Serialization;
 using XLua;
+using UnityEngine.Profiling;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -46,6 +45,11 @@ namespace SDGame.UITools
         public string                       type = string.Empty;
 #endif
         public UnityEngine.Object[]         targets = new UnityEngine.Object[1];
+
+        public override string ToString()
+        {
+            return name;
+        }
     }
 
     /// <summary>
@@ -56,6 +60,21 @@ namespace SDGame.UITools
     {
         public string           name                = string.Empty;
         public UIControlData    subUIData           = null;
+
+        public override string ToString()
+        {
+            return name;
+        }
+    }
+
+    /// <summary>
+    /// 被绑定的UI类字段信息
+    /// </summary>
+    public class UIFieldsInfo
+    {
+        public Type type;
+        public List<FieldInfo> controls = new List<FieldInfo>(10);
+        public List<FieldInfo> subUIs = new List<FieldInfo>();
     }
 
     /// <summary>
@@ -74,6 +93,18 @@ namespace SDGame.UITools
         public List<SubUIItemData>       subUIItemDatas;
 
         /// <summary>
+        /// 被绑定的UI
+        /// </summary>
+        public List<WeakReference<IBindableUI>> bindUIRefs;
+
+        /// <summary>
+        /// 缓存所有打开过的UI类型的字段数据（如果有需求可以在特定时机清理以节约内存）
+        /// </summary>
+        public static Dictionary<Type, UIFieldsInfo> s_uiFieldsCache = new Dictionary<Type, UIFieldsInfo>();
+
+        #region Editor
+#if UNITY_EDITOR
+        /// <summary>
         /// 已知类型列表，自定义类型可以添加到下面指定区域
         /// </summary>
         private static Dictionary<string, Type> _typeMap = new Dictionary<string, Type>()
@@ -89,6 +120,10 @@ namespace SDGame.UITools
             { "Canvas", typeof(Canvas)},
             { "ScrollRect", typeof(ScrollRect)},
             { "SpriteRenderer", typeof(SpriteRenderer)},
+            {"GridLayoutGroup", typeof(GridLayoutGroup) },
+            {"Animation", typeof(Animation) },
+            {"VideoPlayer", typeof(UnityEngine.Video.VideoPlayer) },
+            {"CanvasGroup", typeof(CanvasGroup) },
 
             ////////自定义控件类型请放这里////////
 
@@ -117,6 +152,8 @@ namespace SDGame.UITools
             _typeMap.Values.CopyTo(types, 1);
             return types;
         }
+#endif
+        #endregion
 
         #region BindDataToC#UI
         /// <summary>
@@ -128,16 +165,31 @@ namespace SDGame.UITools
             if (ui == null)
                 return;
 
-            FieldInfo[] fis = ui.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-            for(int i = 0, imax = fis.Length; i < imax; i++)
-            {
-                FieldInfo fi = fis[i];
+#if DEBUG_LOG
+            float time = Time.realtimeSinceStartup;
+            Profiler.BeginSample("BindDataTo");
+#endif
+            UIFieldsInfo fieldInfos = GetUIFieldsInfo(ui.GetType());
             
-                if (fi.GetCustomAttributes(typeof(ControlBindingAttribute), false).Length != 0)
-                    BindCtrl(ui, fi);
-                else if (fi.GetCustomAttributes(typeof(SubUIBindingAttribute), false).Length != 0)
-                    BindSubUI(ui, fi);
-            }
+            var controls = fieldInfos.controls;
+            for (int i = 0, imax = controls.Count; i < imax; i++)
+                BindCtrl(ui, controls[i]);
+
+            var subUIs = fieldInfos.subUIs;
+            for (int i = 0, imax = subUIs.Count; i < imax; i++)
+                BindSubUI(ui, subUIs[i]);
+
+            if (bindUIRefs == null)
+                bindUIRefs = new List<WeakReference<IBindableUI>>();
+
+            bindUIRefs.Add(new WeakReference<IBindableUI>(ui));
+
+#if DEBUG_LOG
+            Profiler.EndSample();
+            float span = Time.realtimeSinceStartup - time;
+            if (span > 0.002f)
+                Debug.LogWarningFormat("BindDataTo {0} 耗时{1}ms", ui.GetType().Name, span * 1000f);
+#endif
         }
 
         private void BindCtrl(IBindableUI ui, FieldInfo fi)
@@ -145,7 +197,7 @@ namespace SDGame.UITools
             int itemIdx = GetCtrlIndex(fi.Name);
             if (itemIdx == -1)
             {
-                Debug.LogErrorFormat("can not find binding control of var [{0}]", fi.Name);
+                Debug.LogErrorFormat("can not find binding control of name [{0}] in prefab", fi.Name);
                 return;
             }
 
@@ -159,14 +211,20 @@ namespace SDGame.UITools
                 // 给数组元素设置数据
                 for (int j = 0, jmax = objs.targets.Length; j < jmax; j++)
                 {
-                    arrObj.SetValue(objs.targets[j], j);
+                    if (objs.targets[j] != null)
+                        arrObj.SetValue(objs.targets[j], j);
+                    else
+                        Debug.LogErrorFormat("Component {0}[{1}] is null", objs.name, j);
                 }
                 fi.SetValue(ui, arrObj);
             }
             else
             {
                 UnityEngine.Object component = GetComponent(itemIdx);
-                fi.SetValue(ui, component);
+                if (component != null)
+                    fi.SetValue(ui, component);
+                else
+                    Debug.LogErrorFormat("Component {0} is null", objs.name);
             }
         }
 
@@ -175,16 +233,44 @@ namespace SDGame.UITools
             int subUIIdx = GetSubUIIndex(fi.Name);
             if(subUIIdx == -1)
             {
-                Debug.LogErrorFormat("can not find binding subUI of var [{0}]", fi.Name);
+                Debug.LogErrorFormat("can not find binding subUI of name [{0}] in prefab", fi.Name);
                 return;
             }
 
             fi.SetValue(ui, subUIItemDatas[subUIIdx].subUIData);
         }
+
+        /// <summary>
+        /// 获取指定UI类的字段信息
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private static UIFieldsInfo GetUIFieldsInfo(Type type)
+        {
+            UIFieldsInfo uIFieldsInfo;
+            if (s_uiFieldsCache.TryGetValue(type, out uIFieldsInfo))
+                return uIFieldsInfo;
+
+            uIFieldsInfo = new UIFieldsInfo() { type = type };
+            FieldInfo[] fis = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            for(int i = 0, imax = fis.Length; i < imax; i++)
+            {
+                FieldInfo fi = fis[i];
+
+                if (fi.GetCustomAttribute<ControlBindingAttribute>(false) != null)
+                    uIFieldsInfo.controls.Add(fi);
+                else if (fi.GetCustomAttribute<SubUIBindingAttribute>(false) != null)
+                    uIFieldsInfo.subUIs.Add(fi);
+            }
+
+            s_uiFieldsCache.Add(type, uIFieldsInfo);
+
+            return uIFieldsInfo;
+        }
         #endregion
 
         #region BindDataToLuaTable
-        public void BindDataToLua(LuaTable luaTable)
+        public void BindDataToLua(IBindableUI ui, LuaTable luaTable)
         {
             if (luaTable == null)
                 return;
@@ -200,13 +286,21 @@ namespace SDGame.UITools
 
                 if(targets.Length == 1)
                 {
-                    luaTable.Set(itemData.name, itemData.targets[0]);
+                    if (targets[0] != null)
+                        luaTable.Set(itemData.name, itemData.targets[0]);
+                    else
+                        Debug.LogErrorFormat("Component {0} is null", itemData.name);
                 }
                 else
                 {
                     LuaTable tmpTbl = luaTable.env.NewTable();
                     for(int i = 0, imax = targets.Length; i < imax; i++)
-                        tmpTbl.Set(i + 1, targets[i]);
+                    {
+                        if (targets[i] != null)
+                            tmpTbl.Set(i + 1, targets[i]);
+                        else
+                            Debug.LogErrorFormat("Component {0}[{1}] is null", itemData.name, i);
+                    }
 
                     luaTable.Set(itemData.name, tmpTbl);
                 }
@@ -216,6 +310,89 @@ namespace SDGame.UITools
             {
                 luaTable.Set(subUI.name, subUI.subUIData);
             }
+
+            if (bindUIRefs == null)
+                bindUIRefs = new List<WeakReference<IBindableUI>>();
+
+            bindUIRefs.Add(new WeakReference<IBindableUI>(ui));
+        }
+        #endregion
+
+        #region UnBind
+        private static List<UIControlData> s_tmpControlDataForUnbind = new List<UIControlData>();
+        /// <summary>
+        /// 解除指定UI及其子节点自动绑定字段的引用
+        /// </summary>
+        /// <param name="uiGo"></param>
+        public static void UnBindUI(GameObject uiGo)
+        {
+            if (uiGo == null)
+                return;
+
+#if DEBUG_LOG
+            float time = Time.realtimeSinceStartup;
+            Profiler.BeginSample("UnBindUI");
+#endif
+
+            uiGo.GetComponentsInChildren(true, s_tmpControlDataForUnbind);
+            for (int i = 0, imax = s_tmpControlDataForUnbind.Count; i < imax; i++)
+            {
+                UIControlData controlData = s_tmpControlDataForUnbind[i];
+                if (controlData.bindUIRefs == null)
+                    continue;
+
+                List<WeakReference<IBindableUI>> bindUIRefs = controlData.bindUIRefs;
+                for (int j = 0, jmax = bindUIRefs.Count; j < jmax; j++)
+                {
+                    WeakReference<IBindableUI> bindUIRef = bindUIRefs[j];
+                    IBindableUI bindUI;
+                    if (!bindUIRef.TryGetTarget(out bindUI))
+                        continue;
+
+                    LuaViewRunner luaViewRunner = bindUI as LuaViewRunner;
+                    if (luaViewRunner == null)
+                    {
+                        UIFieldsInfo fieldInfos = GetUIFieldsInfo(bindUI.GetType());
+                        var controls = fieldInfos.controls;
+                        for (int k = 0, kmax = controls.Count; k < kmax; k++)
+                            controls[k].SetValue(bindUI, null);
+
+                        var subUIs = fieldInfos.subUIs;
+                        for (int k = 0, kmax = subUIs.Count; k < kmax; k++)
+                            subUIs[k].SetValue(bindUI, null);
+                    }
+                    else
+                    {
+                        LuaTable luaTable = luaViewRunner.luaUI;
+                        if (luaTable == null)
+                            continue;
+
+                        List<CtrlItemData> ctrlItemData = controlData.ctrlItemDatas;
+                        for(int k = 0, kmax = ctrlItemData.Count; k < kmax; k++)
+                        {
+                            CtrlItemData itemData = ctrlItemData[k];
+                            luaTable.Set<string, object>(itemData.name, null);
+                        }
+
+                        List<SubUIItemData> subUIItemDatas = controlData.subUIItemDatas;
+                        for (int k = 0, kmax = subUIItemDatas.Count; k < kmax; k++)
+                        {
+                            SubUIItemData subUIItemData = subUIItemDatas[k];
+                            luaTable.Set<string, object>(subUIItemData.name, null);
+                        }
+                    }
+                }
+
+                controlData.bindUIRefs = null;
+            }
+            s_tmpControlDataForUnbind.Clear();
+
+#if DEBUG_LOG
+            Profiler.EndSample();
+            float span = Time.realtimeSinceStartup - time;
+            if (span > 0.002f)
+                Debug.LogWarningFormat("UnBindUI {0} 耗时{1}ms", uiGo.Name, span * 1000f);
+#endif
         }
         #endregion
 
@@ -535,7 +712,8 @@ namespace SDGame.UITools
                 UIBindingPrefabSaveHelper.SavePrefab(gameObject);
 
             StringBuilder sb = new StringBuilder(1024);
-            sb.Append("#region 控件绑定变量声明，自动生成请勿手改\r\n");
+            sb.AppendLine("#region 控件绑定变量声明，自动生成请勿手改");
+            sb.AppendLine("\t\t#pragma warning disable 0649"); // 变量未赋值
 
             foreach (var ctrl in ctrlItemDatas)
             {
@@ -548,11 +726,12 @@ namespace SDGame.UITools
                     sb.AppendFormat("\t\t[ControlBinding]\r\n\t\t{0} {1}[] {2};\r\n", accessLevel, ctrl.type, ctrl.name);
             }
 
-            sb.AppendFormat("\r\n");
+            sb.AppendLine();
             foreach(var subUI in subUIItemDatas)
             {
                 sb.AppendFormat("\t\t[SubUIBinding]\r\n\t\t{0} UIControlData {1};\r\n", accessLevel, subUI.name);
             }
+            sb.AppendLine("\t\t#pragma warning restore 0649");
             sb.Append("#endregion\r\n\r\n");
 
             GUIUtility.systemCopyBuffer = sb.ToString();
