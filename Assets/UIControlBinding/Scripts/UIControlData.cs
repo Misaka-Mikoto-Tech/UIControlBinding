@@ -257,9 +257,9 @@ namespace SDGame.UITools
             {
                 FieldInfo fi = fis[i];
 
-                if (fi.GetCustomAttribute<ControlBindingAttribute>(false) != null)
+                if (fi.IsDefined(typeof(ControlBindingAttribute), false))
                     uIFieldsInfo.controls.Add(fi);
-                else if (fi.GetCustomAttribute<SubUIBindingAttribute>(false) != null)
+                else if (fi.IsDefined(typeof(SubUIBindingAttribute), false))
                     uIFieldsInfo.subUIs.Add(fi);
             }
 
