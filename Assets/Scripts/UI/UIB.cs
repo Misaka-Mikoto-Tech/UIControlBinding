@@ -7,12 +7,14 @@ using SDGame.UITools;
 public class UIB : IBindableUI
 {
     #region 控件绑定变量声明，自动生成请勿手改
+#pragma warning disable 0649
     [ControlBinding]
     private Button btn_OK;
     [ControlBinding]
     private Text[] txt_group;
     [ControlBinding]
     private Dropdown sel_country;
+#pragma warning restore 0649
     #endregion
 
 

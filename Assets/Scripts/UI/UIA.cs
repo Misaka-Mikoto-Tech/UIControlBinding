@@ -7,6 +7,7 @@ using SDGame.UITools;
 public class UIA : IBindableUI
 {
     #region 控件绑定变量声明，自动生成请勿手改
+#pragma warning disable 0649
     [ControlBinding]
     private Text[] lbl_fps;
     [ControlBinding]
@@ -18,6 +19,7 @@ public class UIA : IBindableUI
     private UIControlData LeftUI;
     [SubUIBinding]
     private UIControlData RightUI;
+#pragma warning restore 0649
     #endregion
 
 
