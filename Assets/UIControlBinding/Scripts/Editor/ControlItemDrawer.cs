@@ -81,7 +81,14 @@ namespace SDGame.UITools
                 {
                     Object obj = _itemData.targets[i];
                     EditorGUILayout.BeginHorizontal();
+
+                    EditorGUI.BeginChangeCheck();
                     _itemData.targets[i] = EditorGUILayout.ObjectField(obj, typeof(Object), true);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        EditorUtility.ClearDirty(_container.target);
+                        EditorUtility.SetDirty(_container.target);
+                    }
 
                     EditorGUILayout.Space(); EditorGUILayout.Space(); EditorGUILayout.Space();
                     if (GUILayout.Button("+", EditorStyles.miniButton))

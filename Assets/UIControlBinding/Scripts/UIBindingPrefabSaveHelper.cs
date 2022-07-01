@@ -20,7 +20,12 @@ namespace SDGame.UITools
             GameObject goInHierarchy = Selection.activeGameObject;
             if(goInHierarchy != null)
             {
-                UIControlData[] uiControlData = goInHierarchy.GetComponentsInChildren<UIControlData>();
+                // 从根节点开始遍历，以免当前prefab有多个子UI修改时无法被全部修正
+                var rootTran = goInHierarchy.transform;
+                while (rootTran.parent != null)
+                    rootTran = rootTran.parent;
+
+                UIControlData[] uiControlData = rootTran.GetComponentsInChildren<UIControlData>();
                 if (uiControlData != null)
                 {
                     foreach (var comp in uiControlData)
