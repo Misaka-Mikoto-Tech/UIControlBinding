@@ -1,15 +1,41 @@
-﻿using System.Collections;
+﻿#if UNITY_EDITOR
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Reflection;
-
-#if UNITY_EDITOR
 using UnityEditor;
+
+#if UNITY_2019_1_OR_NEWER
+#   if UNITY_2020_1_OR_NEWER
+using UnityEditor.SceneManagement;
+#   else
+using UnityEditor.Experimental.SceneManagement;
+#   endif
+#endif
 
 namespace SDGame.UITools
 {
     public class UIBindingPrefabSaveHelper : UnityEditor.AssetModificationProcessor
     {
+        static UIBindingPrefabSaveHelper()
+        {
+#if UNITY_2019_1_OR_NEWER
+            PrefabStage.prefabSaving += OnPrefabStageSaving;
+#endif
+        }
+
+#if UNITY_2019_1_OR_NEWER
+        /// <summary>
+        /// 当点击Perfab编辑场景的Save按钮时修改数据不会立刻保存，因此需要在其执行前主动保存一下
+        /// </summary>
+        /// <param name="go"></param>
+        static void OnPrefabStageSaving(GameObject go)
+        {
+            string path = AssetDatabase.GetAssetPath(go);
+            OnWillSaveAssets(new string[] { path });
+            PrefabUtility.SavePrefabAsset(go);
+        }
+#endif
         /// <summary>
         /// 保存资源时修正控件绑定数据
         /// </summary>

@@ -615,6 +615,15 @@ namespace SDGame.UITools
                     objs[j] = correctComponent;
                 }
 
+                if(type.Name != ctrlItemDatas[i].type)
+                {
+                    ctrlItemDatas[i].type = type.Name;
+#if UNITY_2019_1_OR_NEWER
+                    EditorUtility.ClearDirty(this);
+#endif
+                    EditorUtility.SetDirty(this);
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(this);
+                }
                 ctrlItemDatas[i].type = type.Name;
             }
             return true;
