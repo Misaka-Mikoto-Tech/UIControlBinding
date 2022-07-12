@@ -33,7 +33,12 @@ namespace SDGame.UITools
         {
             string path = AssetDatabase.GetAssetPath(go);
             OnWillSaveAssets(new string[] { path });
-            PrefabUtility.SavePrefabAsset(go);
+
+            var prefab = PrefabUtility.GetCorrespondingObjectFromOriginalSource(go);
+            if (prefab != null)
+                PrefabUtility.SavePrefabAsset(prefab);
+            else
+                Debug.LogError($"can not locate prefab {go.name}");
         }
 #endif
         /// <summary>
