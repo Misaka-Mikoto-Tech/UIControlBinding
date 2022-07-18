@@ -497,7 +497,7 @@ namespace SDGame.UITools
             {
                 if (string.IsNullOrEmpty(ctrlItemDatas[i].name)) // TODO Check if is a valid varible name
                 {
-                    Debug.LogErrorFormat("[{1}]第 {0} 个控件没有名字，请修正", i + 1, gameObject.name);
+                    Debug.LogErrorFormat(gameObject,"[{1}]第 {0} 个控件没有名字，请修正", i + 1, gameObject.name);
                     return false;
                 }
 
@@ -505,7 +505,7 @@ namespace SDGame.UITools
                 {
                     if(ctrlItemDatas[i].name == ctrlItemDatas[j].name && i != j)
                     {
-                        Debug.LogErrorFormat("[{3}]控件名字 [{0}] 第 {1} 项与第 {2} 项重复，请修正", ctrlItemDatas[i].name, i + 1, j + 1, gameObject.name);
+                        Debug.LogErrorFormat(gameObject,"[{3}]控件名字 [{0}] 第 {1} 项与第 {2} 项重复，请修正", ctrlItemDatas[i].name, i + 1, j + 1, gameObject.name);
                         return false;
                     }
                 }
@@ -513,7 +513,7 @@ namespace SDGame.UITools
 
             isOK = ReplaceTargetsToUIComponent();
             if(isOK)
-                Debug.LogFormat("[{0}]控件绑定修正完毕", gameObject.name);
+                Debug.LogFormat(gameObject,"[{0}]控件绑定修正完毕", gameObject.name);
 
             return isOK;
         }
@@ -527,20 +527,20 @@ namespace SDGame.UITools
                 {
                     if (string.IsNullOrEmpty(subUI.name))
                     {
-                        Debug.LogErrorFormat("[{0}]第 {1} 个子UI没有设置名字, 请修正", gameObject.name, i + 1);
+                        Debug.LogErrorFormat(gameObject,"[{0}]第 {1} 个子UI没有设置名字, 请修正", gameObject.name, i + 1);
                         return false;
                     }
 
                     if(subUI.subUIData == null)
                     {
-                        Debug.LogErrorFormat("[{0}]第 {1} 个子UI没有赋值, 请修正", gameObject.name, i + 1);
+                        Debug.LogErrorFormat(gameObject,"[{0}]第 {1} 个子UI没有赋值, 请修正", gameObject.name, i + 1);
                         return false;
                     }
 
                     // 必须拖当前 Prefab 下的子UI
                     if (!IsInCurrentPrefab(subUI.subUIData.transform))
                     {
-                        Debug.LogErrorFormat("[{0}]第 {1} 个子UI [{2}]不是当前 Prefab 下的对象，请修正", gameObject.name, i + 1, subUI.name);
+                        Debug.LogErrorFormat(gameObject,"[{0}]第 {1} 个子UI [{2}]不是当前 Prefab 下的对象，请修正", gameObject.name, i + 1, subUI.name);
                         return false;
                     }
                 }
@@ -566,7 +566,7 @@ namespace SDGame.UITools
                 {
                     if(objs[j] == null)
                     {
-                        Debug.LogErrorFormat("[{2}]控件名字 [{0}] 第 {1} 项为空，请修正", ctrlItemDatas[i].name, j + 1, gameObject.name);
+                        Debug.LogErrorFormat(gameObject,"[{2}]控件名字 [{0}] 第 {1} 项为空，请修正", ctrlItemDatas[i].name, j + 1, gameObject.name);
                         return false;
                     }
 
@@ -577,14 +577,14 @@ namespace SDGame.UITools
                     // 必须拖当前 Prefab 下的控件
                     if (!IsInCurrentPrefab(go.transform))
                     {
-                        Debug.LogErrorFormat("[{2}]控件名字 [{0}] 第 {1} 项不是当前 Prefab 下的控件，请修正", ctrlItemDatas[i].name, j + 1, gameObject.name);
+                        Debug.LogErrorFormat(gameObject,"[{2}]控件名字 [{0}] 第 {1} 项不是当前 Prefab 下的控件，请修正", ctrlItemDatas[i].name, j + 1, gameObject.name);
                         return false;
                     }
 
                     UnityEngine.Object correctComponent = FindCorrectComponent(go, ctrlItemDatas[i].type);
                     if(correctComponent == null)
                     {
-                        Debug.LogErrorFormat("[{3}]控件 [{0}] 第 {1} 项不是 {2} 类型，请修正", ctrlItemDatas[i].name, j + 1, ctrlItemDatas[i].type, gameObject.name);
+                        Debug.LogErrorFormat(gameObject,"[{3}]控件 [{0}] 第 {1} 项不是 {2} 类型，请修正", ctrlItemDatas[i].name, j + 1, ctrlItemDatas[i].type, gameObject.name);
                         return false;
                     }
 
@@ -605,7 +605,7 @@ namespace SDGame.UITools
                     }
                     else if(correctComponent.GetType() != type && !correctComponent.GetType().IsSubclassOf(type))
                     {
-                        Debug.LogErrorFormat("[{2}]控件名字 [{0}] 第 {1} 项与第 1 项的类型不同，请修正", ctrlItemDatas[i].name, j + 1, gameObject.name);
+                        Debug.LogErrorFormat(gameObject,"[{2}]控件名字 [{0}] 第 {1} 项与第 1 项的类型不同，请修正", ctrlItemDatas[i].name, j + 1, gameObject.name);
                         return false;
                     }
 
