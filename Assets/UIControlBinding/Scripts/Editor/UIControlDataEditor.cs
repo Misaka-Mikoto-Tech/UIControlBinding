@@ -9,29 +9,30 @@ namespace SDGame.UITools
     [CustomEditor(typeof(UIControlData))]
     public class UIControlDataEditor : Editor
     {
-        public static GUISkin               skin;
-        public static GUIStyle              popupAlignLeft; // TODO 挪出去一个 SkinManager
+        public static GUISkin skin;
+        public static GUIStyle popupAlignLeft; // TODO 挪出去一个 SkinManager
 
-        public string[]                     allTypeNames;
-        public Type[]                       allTypes;
+        public string[] allTypeNames;
+        public Type[] allTypes;
 
-        private List<CtrlItemData>          _ctrlItemDatas;
-        private List<SubUIItemData>         _subUIItemDatas;
+        private List<CtrlItemData> _ctrlItemDatas;
+        private List<SubUIItemData> _subUIItemDatas;
 
-        private List<ControlItemDrawer>     _ctrlItemDrawers;
-        private List<SubUIItemDrawer>       _subUIItemDrawers;
+        private List<ControlItemDrawer> _ctrlItemDrawers;
+        private List<SubUIItemDrawer> _subUIItemDrawers;
 
+        private string _searchPattern = string.Empty;
         void Awake()
         {
-            if(skin == null)
+            if (skin == null)
             {
                 if (EditorGUIUtility.isProSkin)
                     skin = Resources.Load("Editor/UIControlDataSkinPro") as GUISkin;
                 else
                     skin = Resources.Load("Editor/UIControlDataSkinPersonal") as GUISkin;
             }
-            
-            if(popupAlignLeft == null)
+
+            if (popupAlignLeft == null)
             {
                 popupAlignLeft = new GUIStyle("Popup");
                 popupAlignLeft.alignment = TextAnchor.MiddleLeft;
@@ -48,12 +49,12 @@ namespace SDGame.UITools
                 base.OnInspectorGUI();
                 return;
             }
-
+            _searchPattern = EditorGUILayout.TextField(_searchPattern);
             UIControlData data = target as UIControlData;
-            if(data.ctrlItemDatas == null)
+            if (data.ctrlItemDatas == null)
                 data.ctrlItemDatas = new List<CtrlItemData>();
 
-            if(data.subUIItemDatas == null)
+            if (data.subUIItemDatas == null)
                 data.subUIItemDatas = new List<SubUIItemData>();
 
             _ctrlItemDatas = data.ctrlItemDatas;
@@ -67,9 +68,9 @@ namespace SDGame.UITools
             // 绘制控件绑定
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("控件绑定", skin.customStyles[0]);
-            if(_ctrlItemDrawers.Count == 0)
+            if (_ctrlItemDrawers.Count == 0)
             {
-                if(GUILayout.Button("+", EditorStyles.miniButton))
+                if (GUILayout.Button("+", EditorStyles.miniButton))
                 {
                     AddControlAfter(-1);
                     Repaint();
@@ -79,6 +80,10 @@ namespace SDGame.UITools
             EditorGUILayout.EndHorizontal();
             foreach (var drawer in _ctrlItemDrawers)
             {
+                if (!drawer.Match(_searchPattern))
+                {
+                    continue;
+                }
                 GUILayout.Space(10f);
                 if (!drawer.Draw())
                 {
@@ -93,7 +98,7 @@ namespace SDGame.UITools
             // 绘制子UI
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("子UI绑定", skin.customStyles[0]);
-            if(_subUIItemDrawers.Count == 0)
+            if (_subUIItemDrawers.Count == 0)
             {
                 if (GUILayout.Button("+", EditorStyles.miniButton))
                 {
@@ -103,7 +108,7 @@ namespace SDGame.UITools
                 }
             }
             EditorGUILayout.EndHorizontal();
-            foreach(var drawer in _subUIItemDrawers)
+            foreach (var drawer in _subUIItemDrawers)
             {
                 GUILayout.Space(10f);
                 if (!drawer.Draw())
@@ -152,23 +157,23 @@ namespace SDGame.UITools
             RemoveSubUI(idx);
         }
 
-    #region Private
+        #region Private
         private void CheckDrawers()
         {
             if (_ctrlItemDrawers == null)
             {
                 _ctrlItemDrawers = new List<ControlItemDrawer>(100);
-                foreach(var item in _ctrlItemDatas)
+                foreach (var item in _ctrlItemDatas)
                 {
                     ControlItemDrawer drawer = new ControlItemDrawer(this, item);
                     _ctrlItemDrawers.Add(drawer);
                 }
             }
 
-            if(_subUIItemDrawers == null)
+            if (_subUIItemDrawers == null)
             {
                 _subUIItemDrawers = new List<SubUIItemDrawer>(100);
-                foreach(var item in _subUIItemDatas)
+                foreach (var item in _subUIItemDatas)
                 {
                     SubUIItemDrawer drawer = new SubUIItemDrawer(this, item);
                     _subUIItemDrawers.Add(drawer);
@@ -206,7 +211,7 @@ namespace SDGame.UITools
             _subUIItemDrawers.RemoveAt(idx);
         }
 
-    #endregion
+        #endregion
     }
 
 }
