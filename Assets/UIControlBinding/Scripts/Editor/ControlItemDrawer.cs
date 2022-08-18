@@ -18,7 +18,27 @@ namespace SDGame.UITools
             _container = container;
             _itemData = item;
         }
-
+        public bool Match(string pattern)
+        {
+            if (string.IsNullOrEmpty(pattern))
+            {
+                return true;
+            }
+            pattern = pattern.Trim().ToLower();
+            if (_itemData.name.ToLower().Contains(pattern))
+            {
+                return true;
+            }
+            if (_itemData.type.ToLower().Contains(pattern))
+            {
+                return true;
+            }
+            if (_itemData.targets.Any(t => t.name.ToLower().Contains(pattern)))
+            {
+                return true;
+            }
+            return false;
+        }
         public bool Draw()
         {
             Rect rect = EditorGUILayout.BeginVertical();
