@@ -241,6 +241,24 @@ namespace SDGame.UITools
         }
 
         /// <summary>
+        /// 获取所有需要的字段
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        /// <remarks>直接调用 type.GetFields() 无法获取到基类的私有变量，因此需要递归</remarks>
+        private static List<FieldInfo> GetFields(Type type)
+        {
+            List<FieldInfo> fields = new List<FieldInfo>();
+            // 如果type继承自 MonoBehaviour,那么递归到此为止
+            while (type != null && type != typeof(MonoBehaviour) && type != typeof(object))
+            {
+                fields.AddRange(type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
+                type = type.BaseType;
+            }
+            return fields;
+        }
+
+        /// <summary>
         /// 获取指定UI类的字段信息
         /// </summary>
         /// <param name="type"></param>
@@ -252,8 +270,8 @@ namespace SDGame.UITools
                 return uIFieldsInfo;
 
             uIFieldsInfo = new UIFieldsInfo() { type = type };
-            FieldInfo[] fis = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-            for(int i = 0, imax = fis.Length; i < imax; i++)
+            List<FieldInfo> fis = GetFields(type);
+            for(int i = 0, imax = fis.Count; i < imax; i++)
             {
                 FieldInfo fi = fis[i];
 
